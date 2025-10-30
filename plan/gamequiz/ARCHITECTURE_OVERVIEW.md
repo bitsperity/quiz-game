@@ -51,7 +51,7 @@
 1. **Game View** (`/game`)
    - Display auf TV (großer Bildschirm)
    - Primär read-only, empfängt Commands vom Admin
-   - Zeigt Matrix → Question → Answer → zurück zu Matrix
+   - Zeigt Matrix → Question → Punktevergabe → zurück zu Matrix
 
 2. **Admin View** (`/admin`)
    - Moderator-Kontrolle auf iPad
@@ -91,7 +91,6 @@
 
 **Event-Typen:**
 - `game:question-selected` - Admin wählt Frage
-- `game:answer-revealed` - Admin zeigt Antwort
 - `game:return-to-matrix` - Zurück zur Matrix
 - `player:registered` - Neuer Spieler
 - `player:buzzed` - Buzzer wurde gedrückt
@@ -172,7 +171,7 @@ volumes:
 
 ```typescript
 interface GameState {
-  currentView: 'matrix' | 'question' | 'answer';
+  currentView: 'matrix' | 'question-hidden', 'question-reveal';
   selectedQuestion: Question | null;
   players: Map<string, Player>;
   buzzerQueue: BuzzerEntry[];

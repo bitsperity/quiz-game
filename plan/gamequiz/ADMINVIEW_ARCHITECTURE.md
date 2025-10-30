@@ -38,7 +38,7 @@ Die **Admin View** ist die Steuerzentrale für den Moderator (iPad). Sie bietet 
 │                    │  │ Kategorie: Weihnachten │  │   │
 │                    │  │ Wert: 300              │  │   │
 │                    │  │                        │  │   │
-│                    │  │ [Antwort Revealen]     │  │   │
+│                    │  │ [Frage Revealen]     │  │   │
 │                    │  └────────────────────────┘  │   │
 │                    │                               │   │
 │                    │  ┌────────────────────────┐  │   │
