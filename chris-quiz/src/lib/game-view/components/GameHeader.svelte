@@ -7,12 +7,11 @@
 	 * Layout:
 	 * [Title] | [Kategorie] [Punkte] | [Top 3 Spieler horizontal]
 	 */
-	import PlayerScoreboard from './PlayerScoreboard.svelte';
-	import { gameViewState } from '../stores/gameViewState';
+	import { gameViewState, sortedPlayers } from '../stores/gameViewState';
 
 	$: currentView = $gameViewState.currentView;
 	$: selectedQuestion = $gameViewState.selectedQuestion;
-	$: players = $gameViewState.players;
+	$: players = $sortedPlayers; // Verwende sortedPlayers für korrekte Sortierung nach Score
 </script>
 
 <header class="game-header">
