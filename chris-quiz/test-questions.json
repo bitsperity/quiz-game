@@ -1,0 +1,155 @@
+{
+  "questions": [
+    {
+      "category": "Weihnachten",
+      "points": 100,
+      "question": "In welchem Land wurde Jesus geboren?",
+      "answer": "Palästina (Bethlehem)"
+    },
+    {
+      "category": "Weihnachten",
+      "points": 200,
+      "question": "Wie viele Rentiere hat der Weihnachtsmann?",
+      "answer": "Acht"
+    },
+    {
+      "category": "Weihnachten",
+      "points": 300,
+      "question": "Was ist das traditionelle Weihnachtsessen in England?",
+      "answer": "Truthahn mit Plumpudding"
+    },
+    {
+      "category": "Weihnachten",
+      "points": 400,
+      "question": "In welchem Jahr wurde das erste Weihnachtsfest offiziell gefeiert?",
+      "answer": "336 n. Chr. in Rom"
+    },
+    {
+      "category": "Weihnachten",
+      "points": 500,
+      "question": "Was bedeutet 'Advent' auf Latein?",
+      "answer": "Ankunft (adventus)"
+    },
+    {
+      "category": "Geschichte",
+      "points": 100,
+      "question": "In welchem Jahr endete der Zweite Weltkrieg?",
+      "answer": "1945"
+    },
+    {
+      "category": "Geschichte",
+      "points": 200,
+      "question": "Wer war der erste Bundeskanzler der BRD?",
+      "answer": "Konrad Adenauer"
+    },
+    {
+      "category": "Geschichte",
+      "points": 300,
+      "question": "Wann fiel die Berliner Mauer?",
+      "answer": "9. November 1989"
+    },
+    {
+      "category": "Geschichte",
+      "points": 400,
+      "question": "Welcher römische Kaiser wurde im Jahr 44 v. Chr. ermordet?",
+      "answer": "Julius Caesar"
+    },
+    {
+      "category": "Geschichte",
+      "points": 500,
+      "question": "In welchem Jahr wurde die Französische Revolution beendet?",
+      "answer": "1799 (Napoleon putschte)"
+    },
+    {
+      "category": "Geographie",
+      "points": 100,
+      "question": "Wie viele Kontinente gibt es?",
+      "answer": "Sieben"
+    },
+    {
+      "category": "Geographie",
+      "points": 200,
+      "question": "Welches ist der längste Fluss der Welt?",
+      "answer": "Der Nil (oder Amazonas, je nach Messung)"
+    },
+    {
+      "category": "Geographie",
+      "points": 300,
+      "question": "Wie heißt die Hauptstadt von Australien?",
+      "answer": "Canberra"
+    },
+    {
+      "category": "Geographie",
+      "points": 400,
+      "question": "Welches ist das kleinste Land der Welt?",
+      "answer": "Vatikanstadt"
+    },
+    {
+      "category": "Geographie",
+      "points": 500,
+      "question": "Durch wie viele Länder fließt der Rhein?",
+      "answer": "Sechs (Schweiz, Liechtenstein, Österreich, Deutschland, Frankreich, Niederlande)"
+    },
+    {
+      "category": "Wissenschaft",
+      "points": 100,
+      "question": "Wie viele Planeten gibt es in unserem Sonnensystem?",
+      "answer": "Acht"
+    },
+    {
+      "category": "Wissenschaft",
+      "points": 200,
+      "question": "Was ist die chemische Formel für Wasser?",
+      "answer": "H2O"
+    },
+    {
+      "category": "Wissenschaft",
+      "points": 300,
+      "question": "Wie schnell ist das Licht im Vakuum?",
+      "answer": "299.792.458 Meter pro Sekunde"
+    },
+    {
+      "category": "Wissenschaft",
+      "points": 400,
+      "question": "Wer entwickelte die Relativitätstheorie?",
+      "answer": "Albert Einstein"
+    },
+    {
+      "category": "Wissenschaft",
+      "points": 500,
+      "question": "Wie heißt das chemische Element mit dem Symbol 'Au'?",
+      "answer": "Gold (Aurum)"
+    },
+    {
+      "category": "Kultur & Literatur",
+      "points": 100,
+      "question": "Wer schrieb 'Romeo und Julia'?",
+      "answer": "William Shakespeare"
+    },
+    {
+      "category": "Kultur & Literatur",
+      "points": 200,
+      "question": "Wie heißt der Autor von 'Der kleine Prinz'?",
+      "answer": "Antoine de Saint-Exupéry"
+    },
+    {
+      "category": "Kultur & Literatur",
+      "points": 300,
+      "question": "In welcher Stadt spielt Goethes 'Faust'?",
+      "answer": "In mehreren Städten, hauptsächlich jedoch in Wittenberg und Weimar"
+    },
+    {
+      "category": "Kultur & Literatur",
+      "points": 400,
+      "question": "Wer komponierte die 'Zauberflöte'?",
+      "answer": "Wolfgang Amadeus Mozart"
+    },
+    {
+      "category": "Kultur & Literatur",
+      "points": 500,
+      "question": "Wie heißt der erste Band von Tolkiens 'Der Herr der Ringe'?",
+      "answer": "Die Gefährten (The Fellowship of the Ring)"
+    }
+  ]
+}
+

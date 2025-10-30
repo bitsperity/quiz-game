@@ -1,0 +1,17 @@
+:root {
+	--color-christmas-red: #DC143C;
+	--color-christmas-green: #228B22;
+	--color-christmas-gold: #FFD700;
+	--color-dark-bg: #0F1419;
+	--color-light-text: #FFF8DC;
+}
+
+* {
+	box-sizing: border-box;
+}
+
+body {
+	background-color: var(--color-dark-bg);
+	color: var(--color-light-text);
+}
+

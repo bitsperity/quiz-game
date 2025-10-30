@@ -1,0 +1,40 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    ports:
+      - "54321:54321"
+    volumes:
+      - ./data:/app/data
+      - ./src:/app/src
+      - ./static:/app/static
+      - ./package.json:/app/package.json
+      - ./package-lock.json:/app/package-lock.json
+      - ./vite.config.js:/app/vite.config.js
+      - ./vite-plugin-websocket.js:/app/vite-plugin-websocket.js
+      - ./svelte.config.js:/app/svelte.config.js
+      - ./tsconfig.json:/app/tsconfig.json
+      - ./app.html:/app/app.html
+      - ./server.ts:/app/server.ts
+      - /app/node_modules
+      - /app/.svelte-kit
+    environment:
+      - NODE_ENV=development
+      - DATABASE_PATH=/app/data/quiz.db
+      - ADMIN_SECRET_TOKEN=${ADMIN_SECRET_TOKEN:-SECRET_TOKEN}
+      - PORT=54321
+      - VITE_WS_PORT=54321
+    restart: unless-stopped
+    networks:
+      - quiz-network
+    command: npm run dev:server
+
+networks:
+  quiz-network:
+    driver: bridge
+
+volumes:
+  quiz_data:
+    driver: local
+
