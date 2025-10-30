@@ -39,13 +39,14 @@
 <style>
 	.question-container {
 		width: 100%;
-		min-height: 100vh;
+		height: 100%;
 		display: flex;
 		flex-direction: column;
 		align-items: center;
 		justify-content: center;
-		padding: 3rem;
+		padding: 2rem;
 		background: var(--color-dark-bg);
+		overflow: hidden;
 	}
 
 	.question-header {

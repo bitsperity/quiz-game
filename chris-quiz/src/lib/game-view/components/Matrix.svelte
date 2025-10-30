@@ -33,10 +33,6 @@
 </script>
 
 <div class="matrix-container">
-	<div class="matrix-header">
-		<h1 class="title">🎄 WEIHNACHTS-QUIZ 🎄</h1>
-	</div>
-
 	{#if matrix.length > 0 && categoryList.length > 0 && pointValueList.length > 0}
 		<div class="matrix-grid" style="--categories: {categoryList.length}; --rows: {pointValueList.length};">
 			<!-- Kategorien-Header -->
@@ -64,63 +60,57 @@
 <style>
 	.matrix-container {
 		width: 100%;
-		min-height: 100vh;
+		height: 100%;
 		display: flex;
 		flex-direction: column;
 		align-items: center;
 		justify-content: center;
-		padding: 2rem;
+		padding: 0.5rem;
 		background: var(--color-dark-bg);
-	}
-
-	.matrix-header {
-		margin-bottom: 3rem;
-		text-align: center;
-	}
-
-	.title {
-		font-size: clamp(3rem, 8vw, 6rem);
-		font-weight: bold;
-		color: var(--color-christmas-gold);
-		text-shadow: 0 0 20px rgba(255, 215, 0, 0.5);
-		margin: 0;
-		font-family: 'Georgia', serif;
+		overflow: hidden;
+		box-sizing: border-box;
 	}
 
 	.matrix-grid {
 		display: grid;
 		grid-template-columns: repeat(var(--categories), 1fr);
-		grid-template-rows: auto repeat(var(--rows), 1fr);
-		gap: 1.5rem;
-		max-width: 90vw;
+		grid-template-rows: auto repeat(var(--rows), minmax(0, 1fr));
+		gap: 0.5rem;
 		width: 100%;
+		height: 100%;
+		max-height: 100%;
+		padding: 0.5rem;
+		box-sizing: border-box;
+		overflow: hidden;
 	}
 
 	.category-header {
 		display: flex;
 		align-items: center;
 		justify-content: center;
-		padding: 1rem;
-		font-size: clamp(1.5rem, 3vw, 2.5rem);
+		padding: 0.5rem;
+		font-size: clamp(1rem, 2vw, 1.5rem);
 		font-weight: bold;
 		color: var(--color-light-text);
 		background: rgba(220, 20, 60, 0.2);
-		border-radius: 8px;
+		border-radius: 6px;
 		border: 2px solid var(--color-christmas-red);
 	}
 
 	.matrix-cell {
-		aspect-ratio: 16/9;
 		display: flex;
 		align-items: center;
 		justify-content: center;
-		border-radius: 12px;
-		font-size: clamp(2rem, 5vw, 4rem);
+		border-radius: 6px;
+		font-size: clamp(1rem, 1.5vw, 1.5rem);
 		font-weight: bold;
 		transition: all 0.3s ease;
 		cursor: default;
 		position: relative;
-		min-height: 120px;
+		min-height: 0;
+		width: 100%;
+		height: 100%;
+		overflow: hidden;
 	}
 
 	.matrix-cell.empty {

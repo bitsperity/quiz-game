@@ -7,9 +7,9 @@
 	import { onMount, onDestroy } from 'svelte';
 	import { gameViewState } from '$lib/game-view/stores/gameViewState';
 	import { gameViewWebSocket } from '$lib/game-view/services/gameViewWebSocket';
+	import GameHeader from '$lib/game-view/components/GameHeader.svelte';
 	import Matrix from '$lib/game-view/components/Matrix.svelte';
 	import Question from '$lib/game-view/components/Question.svelte';
-	import ScoreDisplay from '$lib/game-view/components/ScoreDisplay.svelte';
 
 	let connectionStatus: 'connecting' | 'connected' | 'disconnected' | 'error' = 'connecting';
 
@@ -82,6 +82,9 @@
 </svelte:head>
 
 <div class="game-view">
+	<!-- Fixed Header mit Scoreboard -->
+	<GameHeader />
+
 	<!-- Connection Status Badge -->
 	<div class="connection-status" class:connected={connectionStatus === 'connected'} class:disconnected={connectionStatus === 'disconnected'} class:error={connectionStatus === 'error'}>
 		<span class="status-dot"></span>
@@ -98,12 +101,15 @@
 		</span>
 	</div>
 
-	<!-- View Switch -->
-	{#if currentView === 'matrix'}
-		<Matrix {matrix} />
-	{:else if currentView === 'question'}
-		<Question question={selectedQuestion} />
-	{/if}
+	<!-- Main Content Area (mit Header-Offset) -->
+	<main class="main-content">
+		<!-- View Switch -->
+		{#if currentView === 'matrix'}
+			<Matrix {matrix} />
+		{:else if currentView === 'question'}
+			<Question question={selectedQuestion} />
+		{/if}
+	</main>
 
 	<!-- Loading State -->
 	{#if connectionStatus === 'connecting' && matrix.length === 0}
@@ -117,15 +123,32 @@
 <style>
 	.game-view {
 		width: 100%;
-		min-height: 100vh;
+		height: 100vh;
+		overflow: hidden;
 		position: relative;
 		background: var(--color-dark-bg);
 		color: var(--color-light-text);
+		display: flex;
+		flex-direction: column;
+	}
+
+	.main-content {
+		position: absolute !important;
+		top: 120px !important; /* Header Höhe */
+		left: 0 !important;
+		right: 0 !important;
+		bottom: 0 !important;
+		overflow: hidden;
+		display: flex;
+		flex-direction: column;
+		box-sizing: border-box;
+		width: 100%;
+		height: calc(100vh - 120px);
 	}
 
 	.connection-status {
 		position: fixed;
-		top: 1rem;
+		top: 130px; /* Unter dem Header */
 		left: 1rem;
 		display: flex;
 		align-items: center;
