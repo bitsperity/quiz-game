@@ -14,9 +14,7 @@
 	import {
 		gameState,
 		selectedCell,
-		activePlayerId,
-		answerRevealed,
-		revealedAnswer
+		activePlayerId
 	} from '$lib/admin-view/stores/adminState';
 	import { adminWebSocket } from '$lib/admin-view/services/adminWebSocket';
 	import type { GameEvent } from '$lib/shared';
@@ -99,25 +97,6 @@
 					}
 				}
 
-				// Update answerRevealed basierend auf currentView
-				if (data.currentView === 'question-reveal') {
-					answerRevealed.set(true);
-					// Finde die Antwort in der Matrix
-					if (data.selectedQuestion) {
-						const matrix = data.questionMatrix || [];
-						for (const row of matrix) {
-							for (const cell of row) {
-								if (cell?.question?.id === data.selectedQuestion.id) {
-									revealedAnswer.set(cell.question.answer || null);
-									break;
-								}
-							}
-						}
-					}
-				} else {
-					answerRevealed.set(false);
-					revealedAnswer.set(null);
-				}
 			}
 		} catch (error) {
 			console.error('[Admin] Fehler beim Laden des Game States:', error);
@@ -209,24 +188,9 @@
 				}
 				break;
 
-			case 'game:answer-revealed':
-				if (event.payload && 'answer' in event.payload) {
-					const { answer } = event.payload as { answer: string };
-					answerRevealed.set(true);
-					revealedAnswer.set(answer);
-					gameState.update((state) => ({
-						...state,
-						currentView: 'question-reveal',
-						gamePhase: 'answering'
-					}));
-				}
-				break;
-
 			case 'game:return-to-matrix':
 				selectedCell.set(null);
 				activePlayerId.set(null);
-				answerRevealed.set(false);
-				revealedAnswer.set(null);
 				gameState.update((state) => ({
 					...state,
 					currentView: 'matrix',
@@ -239,8 +203,6 @@
 			case 'game:reset':
 				selectedCell.set(null);
 				activePlayerId.set(null);
-				answerRevealed.set(false);
-				revealedAnswer.set(null);
 				gameState.update((state) => ({
 					currentView: 'matrix',
 					selectedQuestion: null,
@@ -290,8 +252,6 @@
 			const data = await response.json();
 			if (data.success && data.question) {
 				selectedCell.set({ category, points });
-				answerRevealed.set(false);
-				revealedAnswer.set(null);
 				gameState.update((state) => ({
 					...state,
 					selectedQuestion: data.question,
@@ -312,47 +272,6 @@
 	}
 
 
-	async function handleRevealAnswer() {
-		const currentToken = token || $page.url.searchParams.get('token');
-		if (!currentToken) {
-			alert('Kein Admin-Token gefunden. Bitte Seite neu laden mit ?token=SECRET_TOKEN');
-			return;
-		}
-		
-		try {
-			const response = await fetch('/api/game/reveal-answer', {
-				method: 'POST',
-				headers: {
-					'X-Admin-Token': currentToken
-				}
-			});
-
-			if (response.ok) {
-				const data = await response.json();
-				if (data.success && data.answer) {
-					answerRevealed.set(true);
-					revealedAnswer.set(data.answer);
-					gameState.update((state) => ({
-						...state,
-						currentView: 'question-reveal',
-						gamePhase: 'answering'
-					}));
-
-					// WebSocket Event senden
-					adminWebSocket.send({
-						type: 'admin:reveal-answer'
-					});
-				}
-			} else {
-				const error = await response.json();
-				alert(`Fehler beim Revealen der Antwort: ${error.error || 'Unbekannter Fehler'}`);
-			}
-		} catch (error) {
-			console.error('[Admin] Fehler beim Revealen der Antwort:', error);
-			alert('Fehler beim Revealen der Antwort');
-		}
-	}
-
 	async function handleReturnToMatrix() {
 		const currentToken = token || $page.url.searchParams.get('token');
 		if (!currentToken) {
@@ -371,8 +290,6 @@
 			if (response.ok) {
 				selectedCell.set(null);
 				activePlayerId.set(null);
-				answerRevealed.set(false);
-				revealedAnswer.set(null);
 				gameState.update((state) => ({
 					...state,
 					currentView: 'matrix',
@@ -547,7 +464,6 @@
 			<BuzzerQueue onSelectPlayer={handleSelectPlayer} />
 			<QuestionControl
 				onReturnToMatrix={handleReturnToMatrix}
-				onRevealAnswer={handleRevealAnswer}
 			/>
 		</div>
 	</div>

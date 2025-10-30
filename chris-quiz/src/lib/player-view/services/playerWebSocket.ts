@@ -227,12 +227,6 @@ class PlayerWebSocketService {
 				}
 				break;
 
-			case 'game:answer-revealed':
-				// Antwort wurde revealed - Buzzer deaktivieren
-				setBuzzerEnabled(false);
-				// Frage bleibt sichtbar, nur Buzzer wird deaktiviert
-				break;
-
 			case 'game:return-to-matrix':
 				// Zurück zur Matrix - Buzzer zurücksetzen
 				setBuzzerEnabled(false);

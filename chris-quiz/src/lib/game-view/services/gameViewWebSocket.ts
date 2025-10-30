@@ -82,17 +82,6 @@ class GameViewWebSocketService {
 				}
 				break;
 
-			case 'game:answer-revealed':
-				if ('payload' in event && event.payload) {
-					const payload = event.payload as { answer: string };
-					gameViewState.update((state) => ({
-						...state,
-						currentView: 'answer',
-						selectedAnswer: payload.answer
-					}));
-				}
-				break;
-
 			case 'game:return-to-matrix':
 				gameViewState.update((state) => ({
 					...state,
@@ -168,27 +157,13 @@ class GameViewWebSocketService {
 						buzzerQueue: BuzzerEntry[];
 						matrix: MatrixCell[][];
 					};
-					// Finde die Antwort in der Matrix wenn question-reveal
-					let answer: string | null = null;
-					if (payload.currentView === 'question-reveal' && payload.selectedQuestion) {
-						for (const row of payload.matrix) {
-							for (const cell of row) {
-								if (cell?.question?.id === payload.selectedQuestion?.id) {
-									answer = cell.question.answer || null;
-									break;
-								}
-							}
-						}
-					}
 					gameViewState.set({
 						currentView:
 							payload.currentView === 'question-hidden'
 								? 'question'
-								: payload.currentView === 'question-reveal'
-									? 'answer'
 								: 'matrix',
 						selectedQuestion: payload.selectedQuestion,
-						selectedAnswer: answer,
+						selectedAnswer: null,
 						buzzerQueue: payload.buzzerQueue,
 						players: Array.isArray(payload.players) ? payload.players : [],
 						matrix: payload.matrix

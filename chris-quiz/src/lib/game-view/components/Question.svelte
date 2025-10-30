@@ -10,7 +10,6 @@
 	import BuzzerQueue from './BuzzerQueue.svelte';
 
 	export let question: Question | null = null;
-	export let answer: string | null = null;
 </script>
 
 {#if question}
@@ -29,16 +28,9 @@
 				<div class="question-label">FRAGE:</div>
 				<div class="question-text-content">{question.question}</div>
 			</div>
-			
-			{#if answer}
-				<div class="answer-section" transition:fade>
-					<div class="answer-label">✅ ANTWORT:</div>
-					<div class="answer-text-content">{answer}</div>
-				</div>
-			{/if}
 		</div>
 
-		{#if $sortedBuzzerQueue.length > 0 && !answer}
+		{#if $sortedBuzzerQueue.length > 0}
 			<BuzzerQueue entries={$sortedBuzzerQueue} maxVisible={5} />
 		{/if}
 	</div>

@@ -74,25 +74,6 @@ class GameStateService implements IGameStateService {
 		return null;
 	}
 
-	revealAnswer(): string | null {
-		if (!this.state.selectedQuestion) {
-			return null;
-		}
-
-		// Finde die Antwort in der Matrix
-		for (const row of this.state.questionMatrix) {
-			for (const cell of row) {
-				if (cell.question?.id === this.state.selectedQuestion.id) {
-					// Ändere View zu question-reveal und Phase zu answering
-					this.state.currentView = 'question-reveal';
-					this.state.gamePhase = 'answering';
-					return cell.question.answer;
-				}
-			}
-		}
-
-		return null;
-	}
 
 	returnToMatrix(): void {
 		// Markiere aktuelle Zelle als completed

@@ -50,29 +50,14 @@
 			const response = await fetch('/api/game/state');
 			if (response.ok) {
 				const data = await response.json();
-				// Finde die Antwort wenn question-reveal
-				let answer: string | null = null;
-				if (data.currentView === 'question-reveal' && data.selectedQuestion) {
-					const matrix = Array.isArray(data.questionMatrix) ? data.questionMatrix : [];
-					for (const row of matrix) {
-						for (const cell of row) {
-							if (cell?.question?.id === data.selectedQuestion?.id) {
-								answer = cell.question.answer || null;
-								break;
-							}
-						}
-					}
-				}
 				
 				gameViewState.set({
 					currentView:
 						data.currentView === 'question-hidden'
 							? 'question'
-							: data.currentView === 'question-reveal'
-								? 'answer'
 							: 'matrix',
 					selectedQuestion: data.selectedQuestion || null,
-					selectedAnswer: answer,
+					selectedAnswer: null,
 					buzzerQueue: Array.isArray(data.buzzerQueue) ? data.buzzerQueue : [],
 					players: Array.isArray(data.players) ? data.players : [],
 					matrix: Array.isArray(data.questionMatrix) ? data.questionMatrix : []
@@ -89,7 +74,6 @@
 
 	$: currentView = $gameViewState.currentView;
 	$: selectedQuestion = $gameViewState.selectedQuestion;
-	$: selectedAnswer = $gameViewState.selectedAnswer;
 	$: matrix = $gameViewState.matrix;
 </script>
 
@@ -117,8 +101,8 @@
 	<!-- View Switch -->
 	{#if currentView === 'matrix'}
 		<Matrix {matrix} />
-	{:else if currentView === 'question' || currentView === 'answer'}
-		<Question question={selectedQuestion} answer={selectedAnswer} />
+	{:else if currentView === 'question'}
+		<Question question={selectedQuestion} />
 	{/if}
 
 	<!-- Loading State -->

@@ -4,14 +4,11 @@
 	 * SOLID-Prinzip: Single Responsibility - Nur Frage-Kontrolle
 	 * Agent 2 Bereich
 	 */
-	import { currentQuestion, answerRevealed, revealedAnswer } from '../stores/adminState';
+	import { currentQuestion } from '../stores/adminState';
 
 	export let onReturnToMatrix: () => void = () => {};
-	export let onRevealAnswer: () => void = () => {};
 
 	$: question = $currentQuestion;
-	$: isAnswerRevealed = $answerRevealed;
-	$: answer = $revealedAnswer;
 </script>
 
 <div class="question-control">
@@ -23,25 +20,12 @@
 				<span class="points">💰 {question.points}</span>
 			</div>
 			<div class="question-text">{question.question}</div>
-			
-			{#if isAnswerRevealed && answer}
-				<div class="answer-section">
-					<strong class="answer-label">✅ Antwort:</strong>
-					<div class="answer-text">{answer}</div>
-				</div>
-			{/if}
 		</div>
 
 		<div class="control-buttons">
-			{#if !isAnswerRevealed}
-				<button class="btn-reveal" on:click={onRevealAnswer}>
-					Antwort Revealen
-				</button>
-			{:else}
 			<button class="btn-return" on:click={onReturnToMatrix}>
 				Zurück zur Matrix
 			</button>
-			{/if}
 		</div>
 	{:else}
 		<div class="no-question">

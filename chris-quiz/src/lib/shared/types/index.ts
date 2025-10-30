@@ -54,7 +54,6 @@ export interface WebSocketMessage {
 // Event Types für WebSocket-Kommunikation
 export type GameEvent =
 	| { type: 'game:question-selected'; payload: { question: Question } }
-	| { type: 'game:answer-revealed'; payload: { answer: string } }
 	| { type: 'game:return-to-matrix' }
 	| { type: 'game:reset' }
 	| { type: 'player:registered'; payload: { player: Player } }
@@ -62,7 +61,6 @@ export type GameEvent =
 	| { type: 'player:score-updated'; payload: { playerId: string; newScore: number; delta: number } }
 	| { type: 'state:sync'; payload: GameState }
 	| { type: 'admin:select-question'; payload: { categoryIndex: number; pointValue: number } }
-	| { type: 'admin:reveal-answer' }
 	| { type: 'admin:update-score'; payload: { playerId: string; delta: number } }
 	| { type: 'admin:return-to-matrix' }
 	| { type: 'admin:reset-game' }
