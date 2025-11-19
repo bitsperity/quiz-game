@@ -11,37 +11,31 @@
 	import Matrix from '$lib/game-view/components/Matrix.svelte';
 	import Question from '$lib/game-view/components/Question.svelte';
 
-	let connectionStatus: 'connecting' | 'connected' | 'disconnected' | 'error' = 'connecting';
+	// Store für Verbindungsstatus
+	const connectionStatus = gameViewWebSocket.connectionStatus;
 
 	onMount(() => {
 		// WebSocket verbinden
 		gameViewWebSocket.connect();
 
-		// Status-Handler
+		// Status-Handler für Fehler
 		gameViewWebSocket.onError((error) => {
 			console.error('[Game View] WebSocket Fehler:', error);
-			connectionStatus = 'error';
 			// Fallback: Lade Daten über REST API wenn WebSocket fehlschlägt
 			loadGameState();
 		});
 
-		// Prüfe Verbindungsstatus periodisch und aktualisiere State
-		const statusInterval = setInterval(() => {
-			if (gameViewWebSocket.isConnected()) {
-				connectionStatus = 'connected';
-			} else {
-				connectionStatus = 'disconnected';
-			}
-			// Polling: Lade State kontinuierlich (auch wenn WebSocket verbunden ist, als Backup)
+		// Polling nur noch für GameState Updates als Backup, nicht mehr für Status
+		const stateInterval = setInterval(() => {
 			loadGameState();
-		}, 1000); // Alle 1 Sekunde für schnelleres Update
+		}, 2000);
 
-		// Initial State laden (Fallback wenn WebSocket nicht sofort verbindet)
+		// Initial State laden
 		loadGameState();
 
 		// Cleanup
 		return () => {
-			clearInterval(statusInterval);
+			clearInterval(stateInterval);
 		};
 	});
 
@@ -60,7 +54,9 @@
 					selectedAnswer: null,
 					buzzerQueue: Array.isArray(data.buzzerQueue) ? data.buzzerQueue : [],
 					players: Array.isArray(data.players) ? data.players : [],
-					matrix: Array.isArray(data.questionMatrix) ? data.questionMatrix : []
+					matrix: Array.isArray(data.questionMatrix) ? data.questionMatrix : [],
+					categories: Array.isArray(data.categories) ? data.categories : [],
+					gamePhase: data.gamePhase || 'idle'
 				});
 			}
 		} catch (error) {
@@ -86,14 +82,14 @@
 	<GameHeader />
 
 	<!-- Connection Status Badge -->
-	<div class="connection-status" class:connected={connectionStatus === 'connected'} class:disconnected={connectionStatus === 'disconnected'} class:error={connectionStatus === 'error'}>
+	<div class="connection-status" class:connected={$connectionStatus === 'connected'} class:disconnected={$connectionStatus === 'disconnected'} class:error={$connectionStatus === 'error'}>
 		<span class="status-dot"></span>
 		<span class="status-text">
-			{#if connectionStatus === 'connected'}
+			{#if $connectionStatus === 'connected'}
 				Verbunden
-			{:else if connectionStatus === 'disconnecting'}
-				Verbindung wird getrennt...
-			{:else if connectionStatus === 'error'}
+			{:else if $connectionStatus === 'disconnected'}
+				Verbindung getrennt
+			{:else if $connectionStatus === 'error'}
 				Fehler
 			{:else}
 				Verbinde...
@@ -112,7 +108,7 @@
 	</main>
 
 	<!-- Loading State -->
-	{#if connectionStatus === 'connecting' && matrix.length === 0}
+	{#if $connectionStatus === 'connecting' && matrix.length === 0}
 		<div class="loading-overlay">
 			<div class="loading-spinner"></div>
 			<p>Lade Spielzustand...</p>
@@ -126,7 +122,8 @@
 		height: 100vh;
 		overflow: hidden;
 		position: relative;
-		background: var(--color-dark-bg);
+		background: url('/background.png') no-repeat center center fixed;
+		background-size: cover;
 		color: var(--color-light-text);
 		display: flex;
 		flex-direction: column;

@@ -1,6 +1,9 @@
 <script lang="ts">
 	import '../app.css';
+	import SnowEffect from '$lib/components/SnowEffect.svelte';
 </script>
+
+<SnowEffect />
 
 <main>
 	<slot />

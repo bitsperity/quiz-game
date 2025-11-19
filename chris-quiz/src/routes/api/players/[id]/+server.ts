@@ -42,17 +42,19 @@ export const DELETE: RequestHandler = async ({ request, params }) => {
 		// State-Sync an alle Clients senden (Single Source of Truth - EINZIGES Event)
 		const wsServer = getWebSocketServer();
 		if (wsServer) {
-		const state = gameStateService.getState();
+			const state = gameStateService.getState();
 			wsServer.broadcast({
 				type: 'state:sync',
 				payload: {
 					currentView: state.currentView,
 					selectedQuestion: state.selectedQuestion,
-					players: gameStateService.getPlayers(),
+					players: state.players,
 					buzzerQueue: state.buzzerQueue,
-					matrix: state.questionMatrix
+					questionMatrix: state.questionMatrix,
+					categories: state.categories,
+					gamePhase: state.gamePhase
 				}
-		});
+			});
 		}
 
 		console.log(`[API] Spieler "${player.name}" (${id}) wurde gelöscht`);

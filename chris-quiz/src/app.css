@@ -1,17 +1,72 @@
+/* Magical Christmas Theme */
 :root {
-	--color-christmas-red: #DC143C;
-	--color-christmas-green: #228B22;
-	--color-christmas-gold: #FFD700;
-	--color-dark-bg: #0F1419;
-	--color-light-text: #FFF8DC;
+    /* Colors */
+    --color-primary: #8a1c1c; /* Deep Royal Red */
+    --color-primary-dark: #5c0e0e;
+    --color-secondary: #d4af37; /* Gold/Brass */
+    --color-secondary-light: #f3e5ab;
+    --color-bg-start: #0f2027; /* Midnight Blue */
+    --color-bg-middle: #203a43;
+    --color-bg-end: #2c5364;
+    --color-text: #fdfbf7; /* Cream/Off-White */
+    --color-text-muted: #b8c2cc;
+    
+    /* Glassmorphism */
+    --glass-bg: rgba(255, 255, 255, 0.1);
+    --glass-border: rgba(255, 255, 255, 0.2);
+    --glass-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+    
+    /* Typography */
+    --font-heading: 'Cinzel', serif;
+    --font-body: 'Lato', sans-serif;
 }
 
-* {
-	box-sizing: border-box;
-}
-
+/* Global Reset & Base Styles */
 body {
-	background-color: var(--color-dark-bg);
-	color: var(--color-light-text);
+    margin: 0;
+    padding: 0;
+    font-family: var(--font-body);
+    background: linear-gradient(to bottom, var(--color-bg-start), var(--color-bg-middle), var(--color-bg-end));
+    color: var(--color-text);
+    min-height: 100vh;
+    overflow-x: hidden;
 }
 
+h1, h2, h3, h4, h5, h6 {
+    font-family: var(--font-heading);
+    color: var(--color-secondary);
+    text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+}
+
+/* Utility Classes */
+.glass-panel {
+    background: var(--glass-bg);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid var(--glass-border);
+    border-radius: 16px;
+    box-shadow: var(--glass-shadow);
+}
+
+.btn-gold {
+    background: linear-gradient(135deg, var(--color-secondary), #b8860b);
+    color: #000;
+    border: none;
+    padding: 0.75rem 1.5rem;
+    border-radius: 8px;
+    font-family: var(--font-heading);
+    font-weight: bold;
+    cursor: pointer;
+    transition: transform 0.2s, box-shadow 0.2s;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.btn-gold:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(212, 175, 55, 0.4);
+}
+
+.btn-gold:active {
+    transform: translateY(0);
+}

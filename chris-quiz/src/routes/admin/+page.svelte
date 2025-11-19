@@ -22,8 +22,9 @@
 	$: token = $page.url.searchParams.get('token');
 
 	// Admin Authentication Check
-	onMount(async () => {
-		if (!token) {
+	onMount(() => {
+		const checkAuth = async () => {
+			if (!token) {
 			alert('Admin-Zugriff erfordert Token. Beispiel: /admin?token=SECRET_TOKEN');
 			goto('/');
 			return;
@@ -41,8 +42,10 @@
 			console.error('[Admin] WebSocket Fehler:', error);
 		});
 
-		// Initial State laden
-		loadGameState();
+			// Load initial state
+			await loadGameState();
+		};
+		checkAuth();
 
 		// Polling: Aktualisiere State alle 2 Sekunden (Fallback wenn WebSocket nicht funktioniert)
 		// UND nach jedem Logout um sicherzustellen, dass der State aktuell ist
@@ -113,7 +116,7 @@
 						selectedQuestion: state.selectedQuestion || null,
 						players: Array.isArray(state.players)
 							? state.players
-							: Array.from(state.players?.values() || []),
+							: state.players || [],
 						buzzerQueue: Array.isArray(state.buzzerQueue) ? state.buzzerQueue : [],
 						questionMatrix: Array.isArray(state.questionMatrix) ? state.questionMatrix : [],
 						gamePhase: state.gamePhase || 'idle'

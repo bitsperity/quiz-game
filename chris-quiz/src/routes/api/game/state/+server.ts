@@ -13,9 +13,10 @@ export const GET: RequestHandler = async () => {
 	return json({
 		currentView: state.currentView,
 		selectedQuestion: state.selectedQuestion,
-		players: Array.from(state.players.values()),
+		players: state.players,
 		buzzerQueue: state.buzzerQueue,
 		questionMatrix: state.questionMatrix,
+		categories: state.categories,
 		gamePhase: state.gamePhase
 	});
 };

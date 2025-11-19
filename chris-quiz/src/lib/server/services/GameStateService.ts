@@ -11,25 +11,100 @@ import type {
 	BuzzerEntry,
 	MatrixCell
 } from '$lib/shared';
+import { getQuestionRepository } from './QuestionRepository';
+import db from '../db';
+
+// Internal state uses Map for efficient lookups
+interface InternalGameState {
+	currentView: 'matrix' | 'question-hidden' | 'question-reveal';
+	selectedQuestion: Question | null;
+	players: Map<string, Player>;
+	buzzerQueue: BuzzerEntry[];
+	questionMatrix: MatrixCell[][];
+	categories: string[];
+	gamePhase: 'idle' | 'question' | 'answering' | 'scoring';
+}
 
 class GameStateService implements IGameStateService {
-	private state: GameState = {
+	private state: InternalGameState = {
 		currentView: 'matrix',
 		selectedQuestion: null,
 		players: new Map<string, Player>(),
 		buzzerQueue: [],
 		questionMatrix: [],
+		categories: [],
 		gamePhase: 'idle'
 	};
 
 	private questions: Question[] = [];
 	private questionStartTime: number | null = null;
+	private questionRepo = getQuestionRepository();
+
+	constructor() {
+		this.loadQuestions();
+	}
+
+	loadQuestions(): void {
+		this.questions = this.questionRepo.getAll();
+		// Try to load existing state first
+		if (!this.loadState()) {
+			// If no state exists, initialize fresh
+			if (this.questions.length > 0) {
+				this.initializeMatrix();
+			}
+		}
+	}
+
+	private loadState(): boolean {
+		try {
+			const row = db.prepare('SELECT value FROM game_state WHERE key = ?').get('current_game') as { value: string } | undefined;
+			if (row) {
+				const savedState = JSON.parse(row.value);
+
+				// Restore Map from array of entries if needed, or just object
+				// We stored players as array in JSON, need to convert back to Map
+				const playersMap = new Map<string, Player>();
+				if (Array.isArray(savedState.players)) {
+					savedState.players.forEach((p: Player) => playersMap.set(p.id, p));
+				}
+
+				// Validate loaded state
+				if (!savedState.questionMatrix || savedState.questionMatrix.length === 0 || !savedState.categories || savedState.categories.length === 0) {
+					console.warn('[GameStateService] Loaded state has invalid matrix or categories. Re-initializing.');
+					return false;
+				}
+
+				this.state = {
+					...savedState,
+					players: playersMap
+				};
+				console.log('[GameStateService] State loaded from persistence');
+				return true;
+			}
+		} catch (error) {
+			console.error('[GameStateService] Failed to load state:', error);
+		}
+		return false;
+	}
+
+	private saveState(): void {
+		try {
+			const stateToSave = {
+				...this.state,
+				players: Array.from(this.state.players.values())
+			};
+			db.prepare('INSERT OR REPLACE INTO game_state (key, value) VALUES (?, ?)').run('current_game', JSON.stringify(stateToSave));
+		} catch (error) {
+			console.error('[GameStateService] Failed to save state:', error);
+		}
+	}
 
 	getState(): GameState {
 		return {
 			...this.state,
-			players: new Map(this.state.players), // Clone Map
-			buzzerQueue: [...this.state.buzzerQueue] // Clone Array
+			players: Array.from(this.state.players.values()), // Convert Map to Array
+			buzzerQueue: [...this.state.buzzerQueue], // Clone Array
+			categories: [...this.state.categories]
 		};
 	}
 
@@ -54,19 +129,14 @@ class GameStateService implements IGameStateService {
 				) {
 					// Markiere Zelle als selected
 					cell.state = 'selected';
-					// Entferne Antwort aus Frage-Objekt bevor es gespeichert wird
-					const questionWithoutAnswer = {
-						id: cell.question.id,
-						category: cell.question.category,
-						points: cell.question.points,
-						question: cell.question.question
-					};
-					this.state.selectedQuestion = questionWithoutAnswer;
+
+					this.state.selectedQuestion = cell.question;
 					this.state.currentView = 'question-hidden';
 					this.state.gamePhase = 'question';
 					this.state.buzzerQueue = [];
 					this.questionStartTime = Date.now();
-					return questionWithoutAnswer;
+					this.saveState();
+					return cell.question;
 				}
 			}
 		}
@@ -97,12 +167,14 @@ class GameStateService implements IGameStateService {
 
 	addPlayer(player: Player): void {
 		this.state.players.set(player.id, player);
+		this.saveState();
 	}
 
 	removePlayer(playerId: string): void {
 		this.state.players.delete(playerId);
 		// Entferne Einträge aus der Buzzer-Queue
 		this.state.buzzerQueue = this.state.buzzerQueue.filter((e) => e.playerId !== playerId);
+		this.saveState();
 	}
 
 	updateScore(playerId: string, delta: number): void {
@@ -110,6 +182,7 @@ class GameStateService implements IGameStateService {
 		if (player) {
 			player.score = Math.max(0, player.score + delta);
 			this.state.players.set(playerId, player);
+			this.saveState();
 		}
 	}
 
@@ -138,14 +211,19 @@ class GameStateService implements IGameStateService {
 		};
 
 		this.state.buzzerQueue.push(entry);
+		this.saveState();
 		return entry;
 	}
 
 	clearBuzzerQueue(): void {
 		this.state.buzzerQueue = [];
+		this.saveState();
 	}
 
 	resetGame(): void {
+		// Reload questions from DB to ensure we have the latest
+		this.loadQuestions();
+
 		// Wenn Matrix leer ist, initialisiere sie neu
 		if (this.state.questionMatrix.length === 0 && this.questions.length > 0) {
 			this.initializeMatrix();
@@ -220,6 +298,8 @@ class GameStateService implements IGameStateService {
 		}
 
 		this.state.questionMatrix = matrix;
+		this.state.categories = categories;
+		this.saveState();
 	}
 
 	getPlayer(playerId: string): Player | undefined {

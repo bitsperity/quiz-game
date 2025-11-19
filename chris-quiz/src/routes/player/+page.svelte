@@ -8,7 +8,7 @@
 	import Login from '$lib/player-view/components/Login.svelte';
 	import Scoreboard from '$lib/player-view/components/Scoreboard.svelte';
 	import Buzzer from '$lib/player-view/components/Buzzer.svelte';
-	import Question from '$lib/player-view/components/Question.svelte';
+	import QuestionComponent from '$lib/player-view/components/Question.svelte';
 	import { playerState, setPlayer, updatePlayers, logout, setCurrentQuestion, setBuzzerEnabled, setBuzzed } from '$lib/player-view/stores/playerState';
 	import { playerWebSocket } from '$lib/player-view/services/playerWebSocket';
 	import type { Player, Question } from '$lib/shared';
@@ -158,7 +158,7 @@
 			<main class="main-content">
 				{#if currentQuestion}
 					<div class="question-section">
-						<Question question={currentQuestion} />
+						<QuestionComponent question={currentQuestion} />
 					</div>
 				{/if}
 

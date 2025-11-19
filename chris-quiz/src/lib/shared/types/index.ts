@@ -40,9 +40,10 @@ export interface BuzzerEntry {
 export interface GameState {
 	currentView: 'matrix' | 'question-hidden' | 'question-reveal';
 	selectedQuestion: Question | null;
-	players: Map<string, Player>;
+	players: Player[];
 	buzzerQueue: BuzzerEntry[];
 	questionMatrix: MatrixCell[][];
+	categories: string[];
 	gamePhase: 'idle' | 'question' | 'answering' | 'scoring';
 }
 
@@ -64,5 +65,7 @@ export type GameEvent =
 	| { type: 'admin:update-score'; payload: { playerId: string; delta: number } }
 	| { type: 'admin:return-to-matrix' }
 	| { type: 'admin:reset-game' }
-	| { type: 'player:buzz'; payload: { timestamp: number } };
+	| { type: 'player:buzz'; payload: { timestamp: number } }
+	| { type: 'player:removed'; payload: { playerId: string } }
+	| { type: 'admin:delete-player'; payload: { playerId: string } };
 

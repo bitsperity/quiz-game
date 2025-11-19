@@ -11,8 +11,8 @@ services:
       - ./static:/app/static
       - ./package.json:/app/package.json
       - ./package-lock.json:/app/package-lock.json
-      - ./vite.config.js:/app/vite.config.js
-      - ./vite-plugin-websocket.js:/app/vite-plugin-websocket.js
+      - ./vite.config.ts:/app/vite.config.ts
+      - ./vite-plugin-websocket.ts:/app/vite-plugin-websocket.ts
       - ./svelte.config.js:/app/svelte.config.js
       - ./tsconfig.json:/app/tsconfig.json
       - ./app.html:/app/app.html

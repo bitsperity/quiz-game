@@ -39,8 +39,8 @@ class WebSocketServerManager {
 		const { WebSocketServer: WSS, WebSocket: WS } = await loadWebSocketModule();
 		WebSocketServer = WSS;
 		WebSocket = WS;
-		
-		this.wss = new WebSocketServer({ 
+
+		this.wss = new WebSocketServer({
 			server,
 			path: '/ws'
 		});
@@ -68,7 +68,7 @@ class WebSocketServerManager {
 			hasQuestion: !!state.selectedQuestion,
 			questionId: state.selectedQuestion?.id,
 			questionCategory: state.selectedQuestion?.category,
-			playersCount: state.players.size
+			playersCount: state.players.length
 		});
 		this.sendStateSync(client);
 
@@ -86,7 +86,7 @@ class WebSocketServerManager {
 			console.log('[WebSocket Server] Client getrennt');
 		});
 
-		ws.on('error', (error) => {
+		ws.on('error', (error: Error) => {
 			console.error('[WebSocket Server] Fehler:', error);
 			this.clients.delete(client);
 		});
@@ -142,17 +142,17 @@ class WebSocketServerManager {
 					const payload = event.payload as { playerId: string };
 					// SINGLE SOURCE OF TRUTH: Nur GameStateService verwenden
 					const player = this.gameStateService.getPlayer(payload.playerId);
-					
+
 					if (player) {
 						// Entferne aus GameState (Single Source of Truth)
 						this.gameStateService.removePlayer(payload.playerId);
-						
+
 						// Broadcast
 						this.broadcast({
 							type: 'player:removed',
 							payload: { playerId: payload.playerId }
 						});
-						
+
 						// State-Sync an alle Clients senden
 						this.broadcast({
 							type: 'state:sync',
@@ -161,7 +161,9 @@ class WebSocketServerManager {
 								selectedQuestion: this.gameStateService.getState().selectedQuestion,
 								players: this.gameStateService.getPlayers(),
 								buzzerQueue: this.gameStateService.getState().buzzerQueue,
-								matrix: this.gameStateService.getState().questionMatrix
+								questionMatrix: this.gameStateService.getState().questionMatrix,
+								categories: this.gameStateService.getState().categories,
+								gamePhase: this.gameStateService.getState().gamePhase
 							}
 						});
 					}
@@ -195,16 +197,16 @@ class WebSocketServerManager {
 					const player = (event.payload as { player: Player }).player;
 					client.playerId = player.id;
 					client.type = 'player';
-					
+
 					// SINGLE SOURCE OF TRUTH: Nur GameStateService verwenden
 					const existingInGameState = this.gameStateService.getPlayer(player.id);
 					const existingPlayers = this.gameStateService.getPlayers();
 					const existingByName = existingPlayers.find(p => p.name.toLowerCase() === player.name.toLowerCase());
-					
+
 					if (existingInGameState) {
 						// Player existiert bereits im GameState - verwende existierenden Player (behält Score)
 						console.log(`[WebSocket] Player ${player.id} (${existingInGameState.name}) bereits im GameState, verwende existierenden Player`);
-						
+
 						// Sende State Sync damit Client aktuellen Score sieht
 						this.sendStateSync(client);
 					} else if (existingByName && existingByName.id !== player.id) {
@@ -217,7 +219,7 @@ class WebSocketServerManager {
 						// Re-Registrierung mit alter ID wird IGNORIERT - Client muss sich neu registrieren über /api/players/register
 						console.log(`[WebSocket] ⚠️ Re-Registrierung für nicht-existierenden Player ${player.id} (${player.name}) wird ignoriert - Spieler wurde ausgeloggt`);
 						console.log(`[WebSocket] Aktuelle Spieler im GameState:`, existingPlayers.map(p => `${p.name} (${p.id})`));
-						
+
 						// Sende State Sync damit Client sieht dass er nicht mehr existiert
 						this.sendStateSync(client);
 					}
@@ -229,15 +231,15 @@ class WebSocketServerManager {
 	private sendStateSync(client: ClientConnection): void {
 		const state = this.gameStateService.getState();
 		const playersArray = Array.from(state.players.values());
-
 		const message: GameEvent = {
 			type: 'state:sync',
 			payload: {
-				currentView: state.currentView,
-				selectedQuestion: state.selectedQuestion,
+				...state,
 				players: playersArray,
 				buzzerQueue: state.buzzerQueue,
-				matrix: state.questionMatrix
+				questionMatrix: state.questionMatrix,
+				categories: state.categories,
+				gamePhase: state.gamePhase
 			}
 		};
 

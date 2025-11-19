@@ -15,8 +15,8 @@ RUN npm ci
 RUN npm install -g tsx
 
 # Copy config files
-COPY vite.config.js ./
-COPY vite-plugin-websocket.js ./
+COPY vite.config.ts ./
+COPY vite-plugin-websocket.ts ./
 COPY svelte.config.js ./
 COPY tsconfig.json ./
 COPY src/app.html ./src/app.html

@@ -26,17 +26,17 @@ export const POST: RequestHandler = async ({ request }) => {
 
 	try {
 		const gameStateService = getGameStateService();
-		
+
 		// SINGLE SOURCE OF TRUTH: Hole alle Spieler BEVOR sie gelöscht werden (für Debug-Log)
 		const allPlayers = gameStateService.getPlayers();
 		console.log('[Game Reset] Resette GameState. Aktuelle Spieler:', allPlayers.map(p => `${p.name} (${p.id})`));
-		
+
 		// Reset Game State (löscht auch Player aus GameState - Single Source of Truth)
 		gameStateService.resetGame();
-		
+
 		const remainingPlayers = gameStateService.getPlayers();
 		console.log('[Game Reset] Nach Reset - Verbleibende Spieler:', remainingPlayers.map(p => `${p.name} (${p.id})`));
-			
+
 		// State-Sync an alle Clients senden (Single Source of Truth - EINZIGES Event)
 		// Das reicht aus - Clients sehen dass alle Spieler weg sind und alles zurückgesetzt wurde
 		const wsServer = getWebSocketServer();
@@ -47,18 +47,18 @@ export const POST: RequestHandler = async ({ request }) => {
 
 			// Sende game:reset Event für Clients die darauf reagieren wollen
 			wsServer.broadcast({
-			type: 'game:reset'
-		});
-			
+				type: 'game:reset'
+			});
+
 			// State-Sync mit leerem State
 			wsServer.broadcast({
 				type: 'state:sync',
 				payload: {
-					currentView: state.currentView,
-					selectedQuestion: state.selectedQuestion,
-					players: playersForSync,
+					...state,
+					players: playersForSync, // Use playersForSync as it reflects the post-reset state
 					buzzerQueue: state.buzzerQueue,
-					matrix: state.questionMatrix
+					questionMatrix: state.questionMatrix,
+					gamePhase: state.gamePhase
 				}
 			});
 			console.log('[Game Reset] ✅ Reset-Events gesendet');

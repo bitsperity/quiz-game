@@ -13,6 +13,8 @@ export interface GameViewState {
 	buzzerQueue: BuzzerEntry[];
 	players: Player[];
 	matrix: MatrixCell[][];
+	categories: string[];
+	gamePhase: 'idle' | 'question' | 'answering' | 'scoring';
 }
 
 const initialState: GameViewState = {
@@ -21,7 +23,9 @@ const initialState: GameViewState = {
 	selectedAnswer: null,
 	buzzerQueue: [],
 	players: [],
-	matrix: []
+	matrix: [],
+	categories: [],
+	gamePhase: 'idle'
 };
 
 export const gameViewState = writable<GameViewState>(initialState);
@@ -31,15 +35,9 @@ export const sortedBuzzerQueue = derived(gameViewState, ($state) => {
 	return [...$state.buzzerQueue].sort((a, b) => a.reactionTime - b.reactionTime);
 });
 
-// Derived: Kategorien aus Matrix extrahieren
+// Derived: Kategorien aus State
 export const categories = derived(gameViewState, ($state) => {
-	if ($state.matrix.length === 0) return [];
-	const firstRow = $state.matrix[0];
-	const categorySet = new Set<number>();
-	firstRow.forEach((cell) => {
-		categorySet.add(cell.categoryIndex);
-	});
-	return Array.from(categorySet).sort((a, b) => a - b);
+	return $state.categories;
 });
 
 // Derived: Punktwerte aus Matrix extrahieren

@@ -31,7 +31,7 @@
 		</div>
 
 		{#if $sortedBuzzerQueue.length > 0}
-			<BuzzerQueue entries={$sortedBuzzerQueue} maxVisible={5} />
+			<BuzzerQueue maxVisible={5} />
 		{/if}
 	</div>
 {/if}
@@ -45,7 +45,7 @@
 		align-items: center;
 		justify-content: center;
 		padding: 2rem;
-		background: var(--color-dark-bg);
+		/* Background handled by layout */
 		overflow: hidden;
 	}
 
@@ -58,24 +58,27 @@
 	}
 
 	.category-badge {
+		font-family: var(--font-heading);
 		font-size: clamp(2rem, 4vw, 3rem);
 		font-weight: bold;
-		color: var(--color-christmas-gold);
-		text-shadow: 0 0 20px rgba(255, 215, 0, 0.5);
-		padding: 1rem 2rem;
-		background: rgba(255, 215, 0, 0.1);
-		border: 2px solid var(--color-christmas-gold);
-		border-radius: 12px;
+		color: var(--color-secondary);
+		text-shadow: 0 2px 10px rgba(0,0,0,0.5);
+		padding: 1rem 3rem;
+		background: linear-gradient(90deg, transparent, rgba(212, 175, 55, 0.1), transparent);
+		border-top: 2px solid var(--color-secondary);
+		border-bottom: 2px solid var(--color-secondary);
 	}
 
 	.points-badge {
+		font-family: var(--font-heading);
 		font-size: clamp(1.5rem, 3vw, 2.5rem);
 		font-weight: bold;
-		color: var(--color-christmas-green);
-		padding: 0.75rem 1.5rem;
-		background: rgba(34, 139, 34, 0.1);
-		border: 2px solid var(--color-christmas-green);
-		border-radius: 8px;
+		color: var(--color-text);
+		padding: 0.75rem 2rem;
+		background: var(--color-primary);
+		border-radius: 50px;
+		box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+		border: 2px solid rgba(255,255,255,0.1);
 	}
 
 	.question-content {
@@ -84,34 +87,52 @@
 		align-items: center;
 		justify-content: center;
 		width: 100%;
-		max-width: 1200px;
+		max-width: 1400px;
 	}
 
 	.question-text {
 		width: 100%;
 		text-align: center;
-		padding: 2rem;
-		background: rgba(255, 255, 255, 0.05);
-		border-radius: 16px;
-		border: 2px solid rgba(255, 255, 255, 0.1);
+		padding: 4rem;
+		background: rgba(15, 32, 39, 0.85);
+		border-radius: 24px;
+		border: 1px solid var(--color-secondary);
+		box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+		backdrop-filter: blur(10px);
+		position: relative;
 	}
+    
+    .question-text::before {
+        content: '❄';
+        position: absolute;
+        top: -20px;
+        left: 50%;
+        transform: translateX(-50%);
+        font-size: 40px;
+        color: var(--color-secondary);
+        background: var(--color-bg-middle);
+        padding: 0 10px;
+    }
 
 	.question-label {
+		font-family: var(--font-heading);
 		font-size: clamp(1.5rem, 3vw, 2rem);
-		color: var(--color-christmas-red);
+		color: var(--color-secondary);
 		font-weight: bold;
-		margin-bottom: 1.5rem;
+		margin-bottom: 2rem;
 		text-transform: uppercase;
-		letter-spacing: 0.1em;
+		letter-spacing: 0.2em;
+		opacity: 0.8;
 	}
 
 	.question-text-content {
-		font-size: clamp(2.5rem, 6vw, 5rem);
+		font-family: var(--font-heading);
+		font-size: clamp(2.5rem, 5vw, 4.5rem);
 		font-weight: bold;
-		color: var(--color-light-text);
-		line-height: 1.3;
+		color: var(--color-text);
+		line-height: 1.4;
 		word-wrap: break-word;
-		font-family: 'Inter', system-ui, sans-serif;
+		text-shadow: 0 2px 4px rgba(0,0,0,0.5);
 	}
 
 	.answer-section {
@@ -142,17 +163,6 @@
 		word-wrap: break-word;
 		font-family: 'Inter', system-ui, sans-serif;
 		text-shadow: 0 0 20px rgba(34, 139, 34, 0.5);
-	}
-
-	@keyframes fadeIn {
-		from {
-			opacity: 0;
-			transform: translateY(20px);
-		}
-		to {
-			opacity: 1;
-			transform: translateY(0);
-		}
 	}
 
 	@media (max-width: 1920px) {

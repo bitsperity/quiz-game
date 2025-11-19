@@ -22,17 +22,17 @@ export const POST: RequestHandler = async ({ request }) => {
 		// SINGLE SOURCE OF TRUTH: Nur GameStateService verwenden
 		const existing = gameStateService.getPlayer(playerId);
 		console.log('[Player Logout] Logout für PlayerId:', playerId, 'Player gefunden:', !!existing);
-		
+
 		if (existing) {
 			// Entferne aus GameState (Single Source of Truth)
 			gameStateService.removePlayer(playerId);
 			console.log('[Player Logout] Player entfernt aus GameState:', playerId, 'Name:', existing.name);
-			
+
 			// Prüfe dass Spieler wirklich entfernt wurde
 			const afterRemoval = gameStateService.getPlayer(playerId);
 			const remainingPlayers = gameStateService.getPlayers();
 			console.log('[Player Logout] Nach Entfernung - Spieler noch vorhanden:', !!afterRemoval, 'Verbleibende Spieler:', remainingPlayers.map(p => `${p.name} (${p.id})`));
-			
+
 			// State-Sync an alle Clients senden (Single Source of Truth - EINZIGES Event)
 			// Das reicht aus, Clients sehen dass Spieler weg ist
 			const wsServer = getWebSocketServer();
@@ -41,15 +41,15 @@ export const POST: RequestHandler = async ({ request }) => {
 					const state = gameStateService.getState();
 					const playersForSync = gameStateService.getPlayers();
 					console.log('[Player Logout] Sende state:sync mit', playersForSync.length, 'Spielern:', playersForSync.map(p => `${p.name} (${p.id})`));
-					
+
 					wsServer.broadcast({
 						type: 'state:sync',
 						payload: {
-							currentView: state.currentView,
-							selectedQuestion: state.selectedQuestion,
-							players: playersForSync,
+							...state,
+							players: playersForSync, // Use playersForSync as it's explicitly fetched after removal
 							buzzerQueue: state.buzzerQueue,
-							matrix: state.questionMatrix
+							questionMatrix: state.questionMatrix,
+							gamePhase: state.gamePhase
 						}
 					});
 					console.log('[Player Logout] ✅ state:sync Event gesendet (Spieler entfernt)');

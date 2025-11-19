@@ -38,7 +38,7 @@ export const POST: RequestHandler = async ({ request }) => {
 		}
 
 		const gameStateService = getGameStateService();
-		
+
 		// Duplikat-Check: Prüfe ob Name bereits existiert (case-insensitive)
 		// SINGLE SOURCE OF TRUTH: Nur GameStateService verwenden
 		const existingPlayers = gameStateService.getPlayers();
@@ -61,7 +61,7 @@ export const POST: RequestHandler = async ({ request }) => {
 		// SINGLE SOURCE OF TRUTH: Nur GameStateService
 		gameStateService.addPlayer(player);
 		console.log('[Player Registration] Spieler hinzugefügt:', player.name, 'ID:', player.id);
-		
+
 		// Prüfe dass Spieler wirklich hinzugefügt wurde
 		const afterAdd = gameStateService.getPlayer(player.id);
 		const allPlayers = gameStateService.getPlayers();
@@ -72,23 +72,22 @@ export const POST: RequestHandler = async ({ request }) => {
 		if (wsServer && typeof wsServer.broadcast === 'function') {
 			const playersForSync = gameStateService.getPlayers();
 			console.log('[Player Registration] Sende Events mit', playersForSync.length, 'Spielern:', playersForSync.map(p => `${p.name} (${p.id})`));
-			
+
 			// Sende player:registered Event
 			wsServer.broadcast({
-			type: 'player:registered',
-			payload: { player }
-		});
-		
+				type: 'player:registered',
+				payload: { player }
+			});
+
 			// State-Sync an alle Clients senden (Single Source of Truth)
 			const state = gameStateService.getState();
 			wsServer.broadcast({
-			type: 'state:sync',
-			payload: {
-					currentView: state.currentView,
-					selectedQuestion: state.selectedQuestion,
-					players: playersForSync,
+				type: 'state:sync',
+				payload: {
+					...state,
+					players: playersForSync, // Use playersForSync as it's the most up-to-date list
 					buzzerQueue: state.buzzerQueue,
-					matrix: state.questionMatrix
+					questionMatrix: state.questionMatrix
 				}
 			});
 			console.log('[Player Registration] ✅ Events gesendet');

@@ -59,17 +59,16 @@ export const POST: RequestHandler = async ({ request }) => {
 				type: 'player:buzzed',
 				payload: entry
 			});
-			
+
 			// State-Sync für Konsistenz (alle Views sehen aktuellen State)
 			const updatedState = gameStateService.getState();
 			wsServer.broadcast({
 				type: 'state:sync',
 				payload: {
-					currentView: updatedState.currentView,
-					selectedQuestion: updatedState.selectedQuestion,
-					players: gameStateService.getPlayers(),
+					...updatedState,
+					players: gameStateService.getPlayers(), // Ensure players are up-to-date
 					buzzerQueue: updatedState.buzzerQueue,
-					matrix: updatedState.questionMatrix
+					questionMatrix: updatedState.questionMatrix
 				}
 			});
 		}

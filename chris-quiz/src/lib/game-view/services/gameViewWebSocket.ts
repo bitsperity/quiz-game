@@ -5,6 +5,7 @@
  */
 import type { GameEvent, WebSocketMessage, Question, BuzzerEntry, Player, MatrixCell } from '$lib/shared';
 import { WS_PATH } from '$lib/shared';
+import { get, writable } from 'svelte/store';
 import { gameViewState } from '../stores/gameViewState';
 
 class GameViewWebSocketService {
@@ -15,11 +16,15 @@ class GameViewWebSocketService {
 	private maxReconnectAttempts = 5;
 	private reconnectDelay = 1000;
 
+	public connectionStatus = writable<'connecting' | 'connected' | 'disconnected' | 'error'>('disconnected');
+
 	connect(): void {
 		if (this.ws?.readyState === WebSocket.OPEN) {
+			this.connectionStatus.set('connected');
 			return;
 		}
 
+		this.connectionStatus.set('connecting');
 		const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
 		const wsUrl = `${protocol}//${window.location.host}${WS_PATH}`;
 
@@ -28,6 +33,7 @@ class GameViewWebSocketService {
 
 			this.ws.onopen = () => {
 				console.log('[Game View WS] Verbunden');
+				this.connectionStatus.set('connected');
 				this.reconnectAttempts = 0;
 			};
 
@@ -42,15 +48,18 @@ class GameViewWebSocketService {
 
 			this.ws.onerror = (error) => {
 				console.error('[Game View WS] Fehler:', error);
+				this.connectionStatus.set('error');
 				this.errorHandlers.forEach((handler) => handler(new Error('WebSocket Fehler')));
 			};
 
 			this.ws.onclose = () => {
 				console.log('[Game View WS] Verbindung geschlossen');
+				this.connectionStatus.set('disconnected');
 				this.attemptReconnect();
 			};
 		} catch (error) {
 			console.error('[Game View WS] Verbindungsfehler:', error);
+			this.connectionStatus.set('error');
 			this.errorHandlers.forEach((handler) => handler(error as Error));
 		}
 	}
@@ -99,12 +108,14 @@ class GameViewWebSocketService {
 					selectedAnswer: null,
 					buzzerQueue: [],
 					players: [],
-					matrix: state.matrix.map(row => 
+					matrix: state.matrix.map(row =>
 						row.map(cell => ({
 							...cell,
 							state: cell.state === 'completed' || cell.state === 'selected' ? 'available' : cell.state
 						}))
-					) // Matrix behalten, aber Zellen auf 'available' zurücksetzen
+					), // Matrix behalten, aber Zellen auf 'available' zurücksetzen
+					categories: [],
+					gamePhase: 'idle'
 				}));
 				break;
 
@@ -134,15 +145,15 @@ class GameViewWebSocketService {
 				if ('payload' in event && event.payload) {
 					const payload = event.payload as { playerId: string };
 					console.log('[Game View WS] player:removed Event empfangen für:', payload.playerId);
-					const currentState = gameViewState.get();
+					const currentState = get(gameViewState);
 					console.log('[Game View WS] Aktuelle Spieler:', currentState.players.map(p => p.id));
 					gameViewState.update((state) => {
 						const newPlayers = state.players.filter((p) => p.id !== payload.playerId);
 						console.log('[Game View WS] Neue Spieler-Liste:', newPlayers.map(p => p.id));
 						return {
-						...state,
+							...state,
 							players: newPlayers,
-						buzzerQueue: state.buzzerQueue.filter((entry) => entry.playerId !== payload.playerId)
+							buzzerQueue: state.buzzerQueue.filter((entry) => entry.playerId !== payload.playerId)
 						};
 					});
 				}
@@ -155,18 +166,27 @@ class GameViewWebSocketService {
 						selectedQuestion: Question | null;
 						players: Player[];
 						buzzerQueue: BuzzerEntry[];
-						matrix: MatrixCell[][];
+						questionMatrix: MatrixCell[][];
+						categories: string[];
+						gamePhase: 'idle' | 'question' | 'answering' | 'scoring';
 					};
+					// Map shared GameState view to local GameViewState view
+					let localView: 'matrix' | 'question' | 'answer' = 'matrix';
+					if (payload.currentView === 'question-hidden') {
+						localView = 'question';
+					} else if (payload.currentView === 'question-reveal') {
+						localView = 'answer';
+					}
+
 					gameViewState.set({
-						currentView:
-							payload.currentView === 'question-hidden'
-								? 'question'
-								: 'matrix',
+						currentView: localView,
 						selectedQuestion: payload.selectedQuestion,
 						selectedAnswer: null,
-						buzzerQueue: payload.buzzerQueue,
 						players: Array.isArray(payload.players) ? payload.players : [],
-						matrix: payload.matrix
+						buzzerQueue: payload.buzzerQueue,
+						matrix: payload.questionMatrix,
+						categories: payload.categories || [], // Ensure it's an array
+						gamePhase: payload.gamePhase
 					});
 				}
 				break;

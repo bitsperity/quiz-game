@@ -27,20 +27,20 @@ export const GET: RequestHandler = async ({ request }) => {
 	try {
 		const gameStateService = getGameStateService();
 		const state = gameStateService.getState();
-		
+
 		// Sammle alle Fragen aus der Matrix (ohne Antworten)
 		const questions: Question[] = [];
 		for (const row of state.questionMatrix) {
 			for (const cell of row) {
 				if (cell.question) {
-					// Entferne Antwort vor Rückgabe
-					const questionWithoutAnswer: Question = {
+					// Entferne Antwort aus Frage-Objekt bevor es gespeichert wird
+					const questionWithoutAnswer: Omit<Question, 'answer'> = {
 						id: cell.question.id,
 						category: cell.question.category,
 						points: cell.question.points,
 						question: cell.question.question
 					};
-					questions.push(questionWithoutAnswer);
+					questions.push(questionWithoutAnswer as Question); // Cast back to Question for the array type
 				}
 			}
 		}
@@ -81,7 +81,7 @@ export const POST: RequestHandler = async ({ request }) => {
 
 		const gameStateService = getGameStateService();
 		const state = gameStateService.getState();
-		
+
 		// Sammle alle vorhandenen Fragen
 		const existingQuestions: Question[] = [];
 		for (const row of state.questionMatrix) {
@@ -93,17 +93,19 @@ export const POST: RequestHandler = async ({ request }) => {
 		}
 
 		// Erstelle neue Frage (ohne Antwort im System zu speichern)
-		const newQuestion: Question = {
+		const newQuestion: Omit<Question, 'answer'> = {
 			id: `q_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-			category: category.trim(),
+			category,
 			points,
-			question: question.trim()
+			question
 		};
 
 		// Für die Matrix brauchen wir die vollständige Frage mit Antwort (interne Verwendung)
 		const questionWithAnswer = {
 			...newQuestion,
-			answer: answer.trim()
+			answer: answer.trim(),
+			category: category.trim(),
+			question: question.trim()
 		};
 
 		// Füge neue Frage hinzu und initialisiere Matrix neu

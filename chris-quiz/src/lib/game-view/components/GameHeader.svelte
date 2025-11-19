@@ -71,9 +71,9 @@
 		align-items: center;
 		justify-content: space-between;
 		padding: 0.75rem 1.5rem;
-		background: linear-gradient(135deg, rgba(15, 20, 25, 0.95), rgba(26, 35, 50, 0.95));
+		background: rgba(15, 32, 39, 0.95);
 		backdrop-filter: blur(10px);
-		border-bottom: 2px solid rgba(255, 215, 0, 0.3);
+		border-bottom: 1px solid var(--color-secondary);
 		z-index: 100;
 		box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
 		gap: 1.5rem;
@@ -102,10 +102,11 @@
 	}
 
 	.title {
+		font-family: var(--font-heading);
 		font-size: clamp(1.2rem, 2.5vw, 2rem);
 		font-weight: bold;
-		color: var(--color-christmas-gold);
-		text-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
+		color: var(--color-secondary);
+		text-shadow: 0 2px 4px rgba(0,0,0,0.5);
 		margin: 0;
 		white-space: nowrap;
 		overflow: hidden;
@@ -116,10 +117,10 @@
 		display: flex;
 		align-items: center;
 		gap: 0.75rem;
-		padding: 0.5rem 1rem;
-		background: rgba(255, 215, 0, 0.08);
-		border: 1px solid rgba(255, 215, 0, 0.3);
-		border-radius: 8px;
+		padding: 0.5rem 1.5rem;
+		background: rgba(212, 175, 55, 0.1);
+		border: 1px solid var(--color-secondary);
+		border-radius: 50px;
 		backdrop-filter: blur(10px);
 		font-size: clamp(0.85rem, 1.5vw, 1.1rem);
 		white-space: nowrap;
@@ -128,19 +129,21 @@
 	}
 
 	.question-category {
-		color: var(--color-light-text);
+		color: var(--color-text);
 		font-weight: bold;
 		letter-spacing: 0.5px;
+		font-family: var(--font-heading);
 	}
 
 	.question-separator {
-		color: rgba(255, 215, 0, 0.5);
+		color: var(--color-secondary);
 		font-weight: bold;
 	}
 
 	.question-points {
-		color: var(--color-christmas-green);
+		color: var(--color-secondary);
 		font-weight: bold;
+		font-family: var(--font-heading);
 	}
 
 	/* Top Players Display */
@@ -166,8 +169,8 @@
 	}
 
 	.top-player-card:nth-child(1) {
-		background: rgba(255, 215, 0, 0.1);
-		border-color: rgba(255, 215, 0, 0.3);
+		background: linear-gradient(135deg, rgba(212, 175, 55, 0.2), rgba(212, 175, 55, 0.05));
+		border-color: var(--color-secondary);
 	}
 
 	.top-player-card:nth-child(2) {
@@ -176,13 +179,13 @@
 	}
 
 	.top-player-card:nth-child(3) {
-		background: rgba(184, 134, 11, 0.08);
-		border-color: rgba(184, 134, 11, 0.2);
+		background: rgba(205, 127, 50, 0.08);
+		border-color: rgba(205, 127, 50, 0.2);
 	}
 
 	.top-player-card:hover {
 		background: rgba(255, 255, 255, 0.1);
-		border-color: rgba(255, 215, 0, 0.5);
+		border-color: var(--color-secondary);
 		transform: translateY(-2px);
 	}
 
@@ -202,7 +205,7 @@
 	}
 
 	.player-name {
-		color: var(--color-light-text);
+		color: var(--color-text);
 		font-size: clamp(0.75rem, 1.2vw, 0.95rem);
 		font-weight: 600;
 		overflow: hidden;
@@ -212,14 +215,14 @@
 	}
 
 	.player-score {
-		color: var(--color-christmas-gold);
+		color: var(--color-secondary);
 		font-size: clamp(0.7rem, 1vw, 0.85rem);
 		font-weight: bold;
 		font-family: 'Courier New', monospace;
 	}
 
 	.empty-message {
-		color: rgba(255, 248, 220, 0.5);
+		color: var(--color-text-muted);
 		font-size: 0.85rem;
 		text-align: center;
 		flex: 1;
