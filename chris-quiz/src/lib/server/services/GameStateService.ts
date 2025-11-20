@@ -245,6 +245,7 @@ class GameStateService implements IGameStateService {
 		this.state.buzzerQueue = [];
 		this.state.gamePhase = 'idle';
 		this.questionStartTime = null;
+		this.saveState();
 	}
 
 	// Helper Methods

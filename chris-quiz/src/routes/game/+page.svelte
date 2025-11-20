@@ -122,7 +122,7 @@
 		height: 100vh;
 		overflow: hidden;
 		position: relative;
-		background: url('/background.png') no-repeat center center fixed;
+		background: url('/background2.png') no-repeat center center fixed;
 		background-size: cover;
 		color: var(--color-light-text);
 		display: flex;
