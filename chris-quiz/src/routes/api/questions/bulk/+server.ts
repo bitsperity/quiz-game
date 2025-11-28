@@ -2,11 +2,14 @@
  * API Route: Bulk Question Import
  * SOLID-Prinzip: Single Responsibility - Nur Bulk Import
  * Admin Bereich
+ * 
+ * WICHTIG: Diese Route verwendet jetzt die Datenbank als Single Source of Truth
+ * und synchronisiert den GameState nach Änderungen.
  */
 import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
-import type { Question } from '$lib/shared';
 import { getGameStateService } from '$lib/server/services/GameStateService';
+import { getQuestionRepository } from '$lib/server/services/QuestionRepository';
 
 function requireAdmin(request: Request): boolean {
 	const token =
@@ -31,23 +34,11 @@ export const POST: RequestHandler = async ({ request }) => {
 			return json({ error: 'questions muss ein Array sein' }, { status: 400 });
 		}
 
-		const gameStateService = getGameStateService();
-		const state = gameStateService.getState();
-		
-		// Sammle alle vorhandenen Fragen
-		const existingQuestions: Question[] = [];
-		for (const row of state.questionMatrix) {
-			for (const cell of row) {
-				if (cell.question) {
-					existingQuestions.push(cell.question);
-				}
-			}
-		}
-
-		// Validiere und füge neue Fragen hinzu
-		const newQuestions: Question[] = [];
+		const questionRepo = getQuestionRepository();
 		const errors: string[] = [];
+		let importedCount = 0;
 
+		// Validiere und speichere in DB
 		for (let i = 0; i < questions.length; i++) {
 			const q = questions[i];
 			
@@ -68,24 +59,22 @@ export const POST: RequestHandler = async ({ request }) => {
 				continue;
 			}
 
-			// Erstelle Frage mit Antwort für interne Speicherung
-			const questionWithAnswer = {
-				id: q.id || `q_${Date.now()}_${i}_${Math.random().toString(36).substr(2, 9)}`,
+			// Speichere in DB (Single Source of Truth)
+			questionRepo.create({
 				category: q.category.trim(),
 				points: q.points,
 				question: q.question.trim(),
 				answer: q.answer.trim()
-			};
-
-			newQuestions.push(questionWithAnswer as any);
+			});
+			importedCount++;
 		}
 
-		// Füge alle neuen Fragen hinzu
-		const allQuestions = [...existingQuestions, ...newQuestions];
-		gameStateService.setQuestions(allQuestions);
+		// Synchronisiere GameState mit DB
+		const gameStateService = getGameStateService();
+		gameStateService.rebuildMatrixFromDB();
 
 		return json({
-			imported: newQuestions.length,
+			imported: importedCount,
 			errors: errors.length > 0 ? errors : undefined,
 			success: true
 		});

@@ -1,162 +1,287 @@
 <script lang="ts">
 	/**
-	 * Question Control Component
-	 * SOLID-Prinzip: Single Responsibility - Nur Frage-Kontrolle
-	 * Agent 2 Bereich
+	 * Question Control Component - Admin View
+	 * Zeigt aktuelle Frage MIT Antwort für den Moderator
 	 */
-	import { currentQuestion } from '../stores/adminState';
+	import { gameState } from '../stores/adminState';
 
 	export let onReturnToMatrix: () => void = () => {};
 
-	$: question = $currentQuestion;
+	$: question = $gameState.selectedQuestion;
+	$: buzzerQueue = $gameState.buzzerQueue;
+	$: hasActiveBuzzers = buzzerQueue.length > 0;
 </script>
 
 <div class="question-control">
-	<h2 class="control-title">🎯 AKTUELLE FRAGE</h2>
+	<div class="control-header">
+		<span class="header-icon">🎯</span>
+		<h2 class="control-title">AKTUELLE FRAGE</h2>
+	</div>
+
 	{#if question}
-		<div class="question-info">
-			<div class="question-meta">
-				<span class="category">{question.category}</span>
-				<span class="points">💰 {question.points}</span>
+		<!-- Question Meta -->
+		<div class="question-meta">
+			<div class="meta-badge category-badge">
+				<span class="badge-icon">📂</span>
+				<span class="badge-text">{question.category}</span>
 			</div>
-			<div class="question-text">{question.question}</div>
+			<div class="meta-badge points-badge">
+				<span class="badge-icon">⭐</span>
+				<span class="badge-text">{question.points} Punkte</span>
+			</div>
 		</div>
 
-		<div class="control-buttons">
+		<!-- Question Text -->
+		<div class="question-box">
+			<div class="box-label">❓ FRAGE</div>
+			<p class="question-text">{question.question}</p>
+		</div>
+
+		<!-- Answer (Visible to Admin!) -->
+		<div class="answer-box">
+			<div class="box-label">✅ ANTWORT</div>
+			<p class="answer-text">{question.answer || 'Keine Antwort hinterlegt'}</p>
+		</div>
+
+		<!-- Buzzer Status -->
+		{#if hasActiveBuzzers}
+			<div class="buzzer-status">
+				<span class="buzzer-icon">🔔</span>
+				<span class="buzzer-count">{buzzerQueue.length} Spieler haben gebuzzt</span>
+			</div>
+		{/if}
+
+		<!-- Control Button -->
+		<div class="control-actions">
 			<button class="btn-return" on:click={onReturnToMatrix}>
-				Zurück zur Matrix
+				<span class="btn-icon">↩️</span>
+				<span class="btn-text">Zurück zur Matrix</span>
 			</button>
 		</div>
 	{:else}
 		<div class="no-question">
-			<p>Keine Frage ausgewählt</p>
-			<p class="hint">Klicke auf eine Zelle in der Matrix</p>
+			<div class="no-question-icon">🎄</div>
+			<p class="no-question-text">Keine Frage ausgewählt</p>
+			<p class="no-question-hint">Klicke auf eine Zelle in der Matrix</p>
 		</div>
 	{/if}
 </div>
 
 <style>
 	.question-control {
-		padding: 1rem;
-		background: rgba(15, 20, 25, 0.3);
-		border-radius: 12px;
-		margin-bottom: 1rem;
+		background: linear-gradient(145deg, 
+			rgba(20, 35, 50, 0.95) 0%,
+			rgba(15, 28, 40, 0.98) 100%
+		);
+		border-radius: 16px;
+		border: 1px solid rgba(212, 175, 55, 0.3);
+		overflow: hidden;
+		box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+	}
+
+	/* Header */
+	.control-header {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		gap: 0.5rem;
+		padding: 0.75rem 1rem;
+		background: rgba(212, 175, 55, 0.1);
+		border-bottom: 1px solid rgba(212, 175, 55, 0.2);
+	}
+
+	.header-icon {
+		font-size: 1.2rem;
 	}
 
 	.control-title {
-		font-size: 1.2rem;
-		margin-bottom: 1rem;
-		color: #fff8dc;
-		text-align: center;
+		font-size: 0.9rem;
+		font-weight: bold;
+		color: #d4af37;
+		margin: 0;
+		letter-spacing: 0.1em;
 	}
 
-	.question-info {
-		margin-bottom: 1rem;
-	}
-
+	/* Question Meta */
 	.question-meta {
 		display: flex;
-		justify-content: space-between;
+		gap: 0.75rem;
+		padding: 1rem;
+		flex-wrap: wrap;
+	}
+
+	.meta-badge {
+		display: flex;
 		align-items: center;
-		margin-bottom: 1rem;
-		padding-bottom: 0.5rem;
-		border-bottom: 2px solid rgba(255, 215, 0, 0.3);
+		gap: 0.4rem;
+		padding: 0.4rem 0.75rem;
+		border-radius: 20px;
+		font-size: 0.85rem;
 	}
 
-	.category {
-		font-weight: bold;
-		font-size: 1.1rem;
+	.category-badge {
+		background: rgba(255, 255, 255, 0.08);
+		border: 1px solid rgba(255, 255, 255, 0.15);
+	}
+
+	.category-badge .badge-text {
 		color: #fff8dc;
+		font-weight: 600;
 	}
 
-	.points {
-		font-size: 1.2rem;
-		font-weight: bold;
+	.points-badge {
+		background: rgba(212, 175, 55, 0.15);
+		border: 1px solid rgba(212, 175, 55, 0.4);
+	}
+
+	.points-badge .badge-text {
 		color: #ffd700;
+		font-weight: bold;
+	}
+
+	.badge-icon {
+		font-size: 0.9rem;
+	}
+
+	/* Question Box */
+	.question-box {
+		margin: 0 1rem 0.75rem;
+		padding: 0.75rem 1rem;
+		background: rgba(255, 255, 255, 0.03);
+		border-radius: 10px;
+		border: 1px solid rgba(255, 255, 255, 0.08);
+	}
+
+	.box-label {
+		font-size: 0.7rem;
+		font-weight: bold;
+		color: rgba(255, 248, 220, 0.5);
+		letter-spacing: 0.1em;
+		margin-bottom: 0.4rem;
 	}
 
 	.question-text {
-		font-size: 1rem;
-		line-height: 1.6;
-		color: rgba(255, 248, 220, 0.9);
-		margin-bottom: 1rem;
-		padding: 1rem;
-		background: rgba(255, 255, 255, 0.05);
-		border-radius: 8px;
+		font-size: 0.95rem;
+		line-height: 1.5;
+		color: #fff8dc;
+		margin: 0;
 	}
 
-	.answer-section {
-		margin-top: 1rem;
-		padding: 1rem;
-		background: rgba(34, 139, 34, 0.2);
-		border-radius: 8px;
-		border: 2px solid rgba(255, 215, 0, 0.3);
+	/* Answer Box - Highlighted for Admin */
+	.answer-box {
+		margin: 0 1rem 1rem;
+		padding: 0.75rem 1rem;
+		background: linear-gradient(135deg, 
+			rgba(34, 139, 34, 0.2) 0%,
+			rgba(50, 205, 50, 0.1) 100%
+		);
+		border-radius: 10px;
+		border: 2px solid rgba(50, 205, 50, 0.4);
+		box-shadow: 0 0 15px rgba(50, 205, 50, 0.1);
 	}
 
-	.answer-label {
-		display: block;
-		font-size: 1rem;
-		color: #ffd700;
-		margin-bottom: 0.5rem;
+	.answer-box .box-label {
+		color: #90EE90;
 	}
 
 	.answer-text {
 		font-size: 1.1rem;
-		line-height: 1.6;
-		color: rgba(255, 248, 220, 0.95);
+		line-height: 1.4;
+		color: #90EE90;
+		margin: 0;
 		font-weight: bold;
 	}
 
-	.control-buttons {
+	/* Buzzer Status */
+	.buzzer-status {
 		display: flex;
+		align-items: center;
 		justify-content: center;
-		gap: 1rem;
-	}
-
-	.control-buttons button {
-		padding: 0.75rem 1.5rem;
-		border: none;
+		gap: 0.5rem;
+		margin: 0 1rem 1rem;
+		padding: 0.5rem;
+		background: rgba(220, 20, 60, 0.15);
 		border-radius: 8px;
-		font-weight: bold;
+		border: 1px solid rgba(220, 20, 60, 0.3);
+	}
+
+	.buzzer-icon {
 		font-size: 1rem;
-		cursor: pointer;
-		transition: all 0.2s ease;
-		min-height: 44px;
-		touch-action: manipulation;
+		animation: ring 1s ease-in-out infinite;
 	}
 
-	.btn-reveal {
-		background: linear-gradient(135deg, #228b22, #32cd32);
-		color: white;
+	.buzzer-count {
+		font-size: 0.85rem;
+		color: #ff6b6b;
+		font-weight: 600;
 	}
 
-	.btn-reveal:hover {
-		background: linear-gradient(135deg, #32cd32, #228b22);
-		transform: scale(1.05);
-		box-shadow: 0 4px 12px rgba(34, 139, 34, 0.4);
+	@keyframes ring {
+		0%, 100% { transform: rotate(0deg); }
+		10% { transform: rotate(10deg); }
+		20% { transform: rotate(-10deg); }
+		30% { transform: rotate(5deg); }
+		40%, 100% { transform: rotate(0deg); }
+	}
+
+	/* Control Actions */
+	.control-actions {
+		padding: 1rem;
+		border-top: 1px solid rgba(255, 255, 255, 0.05);
 	}
 
 	.btn-return {
-		background: linear-gradient(135deg, #dc143c, #ff6347);
+		width: 100%;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		gap: 0.5rem;
+		padding: 0.75rem 1rem;
+		background: linear-gradient(135deg, #dc143c 0%, #b01030 100%);
+		border: none;
+		border-radius: 10px;
 		color: white;
+		font-size: 0.9rem;
+		font-weight: bold;
+		cursor: pointer;
+		transition: all 0.2s ease;
 	}
 
 	.btn-return:hover {
-		background: linear-gradient(135deg, #ff6347, #dc143c);
-		transform: scale(1.05);
-		box-shadow: 0 4px 12px rgba(220, 20, 60, 0.4);
+		background: linear-gradient(135deg, #ff2050 0%, #dc143c 100%);
+		transform: translateY(-2px);
+		box-shadow: 0 4px 15px rgba(220, 20, 60, 0.4);
 	}
 
+	.btn-return:active {
+		transform: translateY(0);
+	}
+
+	.btn-icon {
+		font-size: 1.1rem;
+	}
+
+	/* No Question State */
 	.no-question {
-		padding: 2rem;
+		padding: 2rem 1rem;
 		text-align: center;
-		color: rgba(255, 248, 220, 0.5);
 	}
 
-	.hint {
-		font-size: 0.9rem;
-		margin-top: 0.5rem;
+	.no-question-icon {
+		font-size: 2.5rem;
+		margin-bottom: 0.75rem;
+		opacity: 0.5;
+	}
+
+	.no-question-text {
+		font-size: 1rem;
+		color: rgba(255, 248, 220, 0.6);
+		margin: 0 0 0.5rem;
+	}
+
+	.no-question-hint {
+		font-size: 0.85rem;
 		color: rgba(255, 248, 220, 0.4);
+		margin: 0;
 	}
 </style>
-

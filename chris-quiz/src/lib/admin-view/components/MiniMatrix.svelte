@@ -1,50 +1,64 @@
 <script lang="ts">
 	/**
 	 * Mini Matrix Component für Admin View
-	 * SOLID-Prinzip: Single Responsibility - Nur Matrix-Anzeige
-	 * Agent 2 Bereich
+	 * Zeigt Matrix MIT Kategorien für den Moderator
 	 */
 	import type { MatrixCell } from '$lib/shared';
-	import { selectedCell } from '../stores/adminState';
+	import { selectedCell, gameState } from '../stores/adminState';
 
 	export let matrix: MatrixCell[][] = [];
 	export let onCellClick: (category: number, points: number) => void = () => {};
 
 	$: currentSelected = $selectedCell;
-
-	// Berechne Kategorien und Punktwerte aus Matrix
-	$: matrixCategories = matrix.length > 0 && matrix[0]?.length > 0
-		? matrix[0].map((_, idx) => idx)
+	$: categories = $gameState.questionMatrix.length > 0 && $gameState.questionMatrix[0]
+		? $gameState.questionMatrix[0].map(cell => cell.question?.category || `Kat ${cell.categoryIndex + 1}`)
 		: [];
+
+	// Berechne Punktwerte aus Matrix
 	$: matrixPointValues = matrix.length > 0
 		? matrix.map((row) => row[0]?.pointValue).filter((val): val is number => val !== undefined)
 		: [];
+
+	// Anzahl Kategorien
+	$: numCategories = matrix.length > 0 && matrix[0] ? matrix[0].length : 0;
 </script>
 
 <div class="mini-matrix">
-	{#if matrix.length > 0 && matrixCategories.length > 0 && matrixPointValues.length > 0}
-		<!-- Header Row: Kategorien -->
-		<div class="matrix-header"></div>
+	{#if matrix.length > 0 && numCategories > 0 && matrixPointValues.length > 0}
+		<!-- Category Header Row -->
+		<div class="matrix-header" style="--cols: {numCategories}">
+			<div class="header-spacer"></div>
+			{#each categories as category, idx}
+				<div class="category-label" title={category}>
+					{category}
+				</div>
+			{/each}
+		</div>
+
+		<!-- Matrix Rows -->
 		{#each matrixPointValues as pointValue, rowIndex}
-			<div class="matrix-row">
+			<div class="matrix-row" style="--cols: {numCategories}">
 				<div class="point-label">{pointValue}</div>
-				{#each matrixCategories as categoryIndex}
+				{#each Array(numCategories) as _, categoryIndex}
 					{@const cell = matrix[rowIndex]?.[categoryIndex]}
 					{@const isSelected = currentSelected?.category === categoryIndex && currentSelected?.points === pointValue}
 					<button
-						class="mini-matrix-cell"
+						class="matrix-cell"
 						class:selected={isSelected}
 						class:available={cell?.state === 'available'}
 						class:completed={cell?.state === 'completed'}
 						on:click={() => onCellClick(categoryIndex, pointValue)}
 						disabled={cell?.state === 'completed' || !cell?.question}
+						title="{categories[categoryIndex]} - {pointValue}"
 					>
 						{#if cell?.state === 'completed'}
-							<span class="completed-mark">✓</span>
+							<span class="cell-check">✓</span>
+						{:else if cell?.state === 'selected'}
+							<span class="cell-active">▶</span>
 						{:else if cell?.question}
-							<span class="points">{pointValue}</span>
+							<span class="cell-points">{pointValue}</span>
 						{:else}
-							<span class="empty">—</span>
+							<span class="cell-empty">—</span>
 						{/if}
 					</button>
 				{/each}
@@ -52,101 +66,201 @@
 		{/each}
 	{:else}
 		<div class="empty-matrix">
-			<p>Keine Matrix-Daten verfügbar</p>
+			<div class="empty-icon">🎄</div>
+			<p>Keine Matrix-Daten</p>
+			<p class="empty-hint">Fragen im Admin-Panel hinzufügen</p>
 		</div>
 	{/if}
 </div>
 
 <style>
 	.mini-matrix {
-		display: flex;
-		flex-direction: column;
-		gap: 0.5rem;
+		background: linear-gradient(145deg, 
+			rgba(20, 35, 50, 0.95) 0%,
+			rgba(15, 28, 40, 0.98) 100%
+		);
+		border-radius: 16px;
+		border: 1px solid rgba(212, 175, 55, 0.3);
 		padding: 1rem;
-		background: rgba(15, 20, 25, 0.5);
-		border-radius: 12px;
-		max-width: 100%;
 		overflow-x: auto;
+		box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
 	}
 
+	/* Category Header */
+	.matrix-header {
+		display: grid;
+		grid-template-columns: 3rem repeat(var(--cols), 1fr);
+		gap: 0.4rem;
+		margin-bottom: 0.5rem;
+		padding-bottom: 0.5rem;
+		border-bottom: 1px solid rgba(212, 175, 55, 0.2);
+	}
+
+	.header-spacer {
+		/* Empty space above point labels */
+	}
+
+	.category-label {
+		font-size: 0.65rem;
+		font-weight: bold;
+		color: #d4af37;
+		text-align: center;
+		text-transform: uppercase;
+		letter-spacing: 0.05em;
+		padding: 0.3rem 0.2rem;
+		background: rgba(212, 175, 55, 0.1);
+		border-radius: 6px;
+		white-space: nowrap;
+		overflow: hidden;
+		text-overflow: ellipsis;
+		min-width: 0;
+	}
+
+	/* Matrix Row */
 	.matrix-row {
 		display: grid;
-		grid-template-columns: 3rem repeat(5, 1fr);
-		gap: 0.5rem;
-		align-items: center;
-	}
-
-	@media (max-width: 768px) {
-		.matrix-row {
-			grid-template-columns: 2.5rem repeat(5, minmax(40px, 1fr));
-		}
+		grid-template-columns: 3rem repeat(var(--cols), 1fr);
+		gap: 0.4rem;
+		margin-bottom: 0.4rem;
 	}
 
 	.point-label {
+		display: flex;
+		align-items: center;
+		justify-content: center;
 		font-weight: bold;
-		font-size: 0.9rem;
-		color: #ffd700;
-		text-align: center;
+		font-size: 0.8rem;
+		color: #d4af37;
 	}
 
-	.mini-matrix-cell {
-		aspect-ratio: 1;
+	/* Matrix Cell */
+	.matrix-cell {
+		aspect-ratio: 1.2;
 		display: flex;
 		align-items: center;
 		justify-content: center;
 		border-radius: 8px;
-		font-size: clamp(0.75rem, 2vw, 1.25rem);
 		font-weight: bold;
 		cursor: pointer;
 		transition: all 0.2s ease;
 		touch-action: manipulation;
 		border: 2px solid rgba(255, 255, 255, 0.1);
-		background: rgba(34, 139, 34, 0.2);
-		color: #fff8dc;
-		min-width: 50px;
-		min-height: 50px;
+		background: linear-gradient(145deg, 
+			rgba(30, 60, 80, 0.8) 0%,
+			rgba(25, 50, 70, 0.9) 100%
+		);
+		color: #d4af37;
+		min-height: 40px;
+		font-size: 0.85rem;
 	}
 
-	.mini-matrix-cell:hover:not(:disabled) {
-		transform: scale(1.1);
-		box-shadow: 0 4px 12px rgba(255, 215, 0, 0.4);
-		border-color: rgba(255, 215, 0, 0.6);
+	.matrix-cell.available {
+		border-color: rgba(212, 175, 55, 0.3);
 	}
 
-	.mini-matrix-cell.selected {
+	.matrix-cell.available:hover:not(:disabled) {
+		transform: scale(1.08);
+		border-color: rgba(212, 175, 55, 0.8);
+		box-shadow: 0 4px 15px rgba(212, 175, 55, 0.3);
+		background: linear-gradient(145deg, 
+			rgba(40, 80, 100, 0.9) 0%,
+			rgba(30, 60, 80, 0.95) 100%
+		);
+	}
+
+	.matrix-cell.selected {
 		border: 3px solid #ffd700;
-		box-shadow: 0 0 20px rgba(255, 215, 0, 0.6);
+		box-shadow: 0 0 20px rgba(255, 215, 0, 0.5);
 		background: rgba(255, 215, 0, 0.2);
+		animation: pulse-selected 1.5s ease-in-out infinite;
 	}
 
-	.mini-matrix-cell.completed {
-		opacity: 0.5;
+	.matrix-cell.completed {
+		background: rgba(50, 50, 60, 0.5);
+		border-color: rgba(255, 255, 255, 0.05);
 		cursor: not-allowed;
-		background: rgba(128, 128, 128, 0.3);
 	}
 
-	.mini-matrix-cell:disabled {
+	.matrix-cell:disabled {
 		cursor: not-allowed;
-		opacity: 0.3;
+		opacity: 0.4;
 	}
 
-	.completed-mark {
-		font-size: 1.5rem;
+	/* Cell Content */
+	.cell-check {
+		color: rgba(100, 200, 100, 0.6);
+		font-size: 1.1rem;
+	}
+
+	.cell-active {
 		color: #ffd700;
-	}
-
-	.points {
 		font-size: 1rem;
+		animation: blink 0.8s ease-in-out infinite;
 	}
 
-	.empty {
+	.cell-points {
+		font-size: 0.9rem;
+	}
+
+	.cell-empty {
 		opacity: 0.3;
+		font-size: 0.8rem;
 	}
 
+	/* Empty State */
 	.empty-matrix {
 		padding: 2rem;
 		text-align: center;
+	}
+
+	.empty-icon {
+		font-size: 2rem;
+		margin-bottom: 0.5rem;
+		opacity: 0.5;
+	}
+
+	.empty-matrix p {
+		margin: 0;
 		color: rgba(255, 248, 220, 0.5);
 	}
-</style>
 
+	.empty-hint {
+		font-size: 0.8rem;
+		margin-top: 0.3rem !important;
+		color: rgba(255, 248, 220, 0.3) !important;
+	}
+
+	/* Animations */
+	@keyframes pulse-selected {
+		0%, 100% { box-shadow: 0 0 20px rgba(255, 215, 0, 0.5); }
+		50% { box-shadow: 0 0 30px rgba(255, 215, 0, 0.8); }
+	}
+
+	@keyframes blink {
+		0%, 100% { opacity: 1; }
+		50% { opacity: 0.5; }
+	}
+
+	/* Responsive */
+	@media (max-width: 600px) {
+		.matrix-header,
+		.matrix-row {
+			grid-template-columns: 2.5rem repeat(var(--cols), 1fr);
+			gap: 0.3rem;
+		}
+
+		.category-label {
+			font-size: 0.55rem;
+			padding: 0.2rem;
+		}
+
+		.matrix-cell {
+			min-height: 35px;
+			font-size: 0.75rem;
+		}
+
+		.point-label {
+			font-size: 0.7rem;
+		}
+	}
+</style>

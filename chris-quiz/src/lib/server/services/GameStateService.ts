@@ -23,6 +23,7 @@ interface InternalGameState {
 	questionMatrix: MatrixCell[][];
 	categories: string[];
 	gamePhase: 'idle' | 'question' | 'answering' | 'scoring';
+	questionStartTime: number | null; // Persistiere die Startzeit
 }
 
 class GameStateService implements IGameStateService {
@@ -33,11 +34,11 @@ class GameStateService implements IGameStateService {
 		buzzerQueue: [],
 		questionMatrix: [],
 		categories: [],
-		gamePhase: 'idle'
+		gamePhase: 'idle',
+		questionStartTime: null
 	};
 
 	private questions: Question[] = [];
-	private questionStartTime: number | null = null;
 	private questionRepo = getQuestionRepository();
 
 	constructor() {
@@ -134,7 +135,7 @@ class GameStateService implements IGameStateService {
 					this.state.currentView = 'question-hidden';
 					this.state.gamePhase = 'question';
 					this.state.buzzerQueue = [];
-					this.questionStartTime = Date.now();
+					this.state.questionStartTime = Date.now();
 					this.saveState();
 					return cell.question;
 				}
@@ -162,7 +163,8 @@ class GameStateService implements IGameStateService {
 		this.state.selectedQuestion = null;
 		this.state.buzzerQueue = [];
 		this.state.gamePhase = 'idle';
-		this.questionStartTime = null;
+		this.state.questionStartTime = null;
+		this.saveState();
 	}
 
 	addPlayer(player: Player): void {
@@ -199,8 +201,8 @@ class GameStateService implements IGameStateService {
 		}
 
 		// Berechne Reaktionszeit
-		const reactionTime = this.questionStartTime
-			? timestamp - this.questionStartTime
+		const reactionTime = this.state.questionStartTime
+			? timestamp - this.state.questionStartTime
 			: 0;
 
 		const entry: BuzzerEntry = {
@@ -244,7 +246,7 @@ class GameStateService implements IGameStateService {
 		this.state.players = new Map<string, Player>();
 		this.state.buzzerQueue = [];
 		this.state.gamePhase = 'idle';
-		this.questionStartTime = null;
+		this.state.questionStartTime = null;
 		this.saveState();
 	}
 
@@ -254,19 +256,67 @@ class GameStateService implements IGameStateService {
 		this.initializeMatrix();
 	}
 
+	/**
+	 * Rebuilds the matrix from the current database state.
+	 * Call this after CRUD operations on questions to sync the game state.
+	 */
+	rebuildMatrixFromDB(): void {
+		console.log('[GameStateService] Rebuilding matrix from database...');
+		
+		// Reload questions from database
+		this.questions = this.questionRepo.getAll();
+		console.log(`[GameStateService] Loaded ${this.questions.length} questions from DB`);
+		
+		// Preserve completed states from existing matrix
+		const completedQuestionIds = new Set<string>();
+		for (const row of this.state.questionMatrix) {
+			for (const cell of row) {
+				if (cell.state === 'completed' && cell.question) {
+					completedQuestionIds.add(cell.question.id);
+				}
+			}
+		}
+		
+		// Reinitialize the matrix with fresh data
+		this.initializeMatrix();
+		
+		// Restore completed states for questions that still exist
+		for (const row of this.state.questionMatrix) {
+			for (const cell of row) {
+				if (cell.question && completedQuestionIds.has(cell.question.id)) {
+					cell.state = 'completed';
+				}
+			}
+		}
+		
+		this.saveState();
+		console.log('[GameStateService] Matrix rebuilt successfully');
+	}
+
 	private initializeMatrix(): void {
-		// Gruppiere Fragen nach Kategorie und Punktewert
+		// Gruppiere Fragen nach Kategorie (case-insensitive) und Punktewert
+		// Normalisiere Kategorienamen für konsistente Gruppierung
 		const categoryMap = new Map<string, Set<number>>();
+		const categoryDisplayNames = new Map<string, string>(); // normalized -> display name
 		const questionMap = new Map<string, Question>();
 
 		for (const question of this.questions) {
-			const key = `${question.category}-${question.points}`;
+			// Normalize category name for grouping (uppercase)
+			const normalizedCategory = question.category.toUpperCase().trim();
+			
+			// Keep track of the display name (prefer uppercase version, or first seen)
+			if (!categoryDisplayNames.has(normalizedCategory)) {
+				// Use the uppercase version for display
+				categoryDisplayNames.set(normalizedCategory, normalizedCategory);
+			}
+			
+			const key = `${normalizedCategory}-${question.points}`;
 			questionMap.set(key, question);
 
-			if (!categoryMap.has(question.category)) {
-				categoryMap.set(question.category, new Set());
+			if (!categoryMap.has(normalizedCategory)) {
+				categoryMap.set(normalizedCategory, new Set());
 			}
-			categoryMap.get(question.category)!.add(question.points);
+			categoryMap.get(normalizedCategory)!.add(question.points);
 		}
 
 		// Erstelle Matrix
@@ -299,8 +349,11 @@ class GameStateService implements IGameStateService {
 		}
 
 		this.state.questionMatrix = matrix;
-		this.state.categories = categories;
+		// Use display names for categories
+		this.state.categories = categories.map(c => categoryDisplayNames.get(c) || c);
 		this.saveState();
+		
+		console.log(`[GameStateService] Matrix initialized with ${this.state.categories.length} categories:`, this.state.categories);
 	}
 
 	getPlayer(playerId: string): Player | undefined {

@@ -1,4 +1,5 @@
 import { getQuestionRepository } from '$lib/server/services/QuestionRepository';
+import { getGameStateService } from '$lib/server/services/GameStateService';
 import { fail } from '@sveltejs/kit';
 import type { Actions, PageServerLoad } from './$types';
 
@@ -8,6 +9,16 @@ export const load: PageServerLoad = async () => {
         questions: repo.getAll()
     };
 };
+
+/**
+ * Synchronizes the GameState matrix with the database after CRUD operations.
+ * This ensures that changes made in the admin panel are reflected in the game.
+ */
+function syncGameStateWithDB(): void {
+    const gameStateService = getGameStateService();
+    gameStateService.rebuildMatrixFromDB();
+    console.log('[Admin Questions] GameState synchronized with database');
+}
 
 export const actions: Actions = {
     create: async ({ request }) => {
@@ -24,6 +35,9 @@ export const actions: Actions = {
         const repo = getQuestionRepository();
         repo.create({ category, points, question, answer });
 
+        // Sync GameState with DB changes
+        syncGameStateWithDB();
+
         return { success: true };
     },
 
@@ -37,6 +51,9 @@ export const actions: Actions = {
 
         const repo = getQuestionRepository();
         repo.delete(id);
+
+        // Sync GameState with DB changes
+        syncGameStateWithDB();
 
         return { success: true };
     },
@@ -55,6 +72,9 @@ export const actions: Actions = {
 
         const repo = getQuestionRepository();
         repo.update({ id, category, points, question, answer });
+
+        // Sync GameState with DB changes
+        syncGameStateWithDB();
 
         return { success: true };
     }

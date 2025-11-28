@@ -2,10 +2,14 @@
  * API Route: Reset Questions
  * SOLID-Prinzip: Single Responsibility - Nur Reset
  * Admin Bereich
+ * 
+ * WICHTIG: Diese Route löscht alle Questions aus der Datenbank
+ * und synchronisiert den GameState.
  */
 import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import { getGameStateService } from '$lib/server/services/GameStateService';
+import { getQuestionRepository } from '$lib/server/services/QuestionRepository';
 
 function requireAdmin(request: Request): boolean {
 	const token =
@@ -23,8 +27,13 @@ export const POST: RequestHandler = async ({ request }) => {
 	}
 
 	try {
+		// Lösche alle Questions aus der DB (Single Source of Truth)
+		const questionRepo = getQuestionRepository();
+		questionRepo.deleteAll();
+
+		// Synchronisiere GameState mit leerer DB
 		const gameStateService = getGameStateService();
-		gameStateService.setQuestions([]);
+		gameStateService.rebuildMatrixFromDB();
 
 		return json({
 			success: true,

@@ -1,18 +1,17 @@
 <script lang="ts">
 	/**
-	 * Player Dashboard Component
-	 * SOLID-Prinzip: Single Responsibility - Nur Spieler-Anzeige und Score-Kontrolle
-	 * Agent 2 Bereich
+	 * Player Dashboard Component - Admin View
+	 * Spieler-Übersicht mit Score-Kontrolle
 	 */
-	import type { Player, Question } from '$lib/shared';
-	import { sortedPlayers, activePlayerId, currentQuestion } from '../stores/adminState';
+	import { sortedPlayers, activePlayerId, gameState } from '../stores/adminState';
 
 	export let onScoreUpdate: (playerId: string, delta: number) => void = () => {};
 	export let onDeletePlayer: (playerId: string) => void = () => {};
 
 	$: players = $sortedPlayers;
 	$: activeId = $activePlayerId;
-	$: question = $currentQuestion;
+	$: question = $gameState.selectedQuestion;
+	$: points = question?.points || 0;
 
 	function updateScore(playerId: string, delta: number) {
 		onScoreUpdate(playerId, delta);
@@ -23,47 +22,67 @@
 			onDeletePlayer(playerId);
 		}
 	}
+
+	function getRankIcon(index: number): string {
+		if (index === 0) return '🥇';
+		if (index === 1) return '🥈';
+		if (index === 2) return '🥉';
+		return `${index + 1}.`;
+	}
 </script>
 
 <div class="player-dashboard">
-	<h2 class="dashboard-title">👥 SPIELER</h2>
+	<div class="dashboard-header">
+		<span class="header-icon">👥</span>
+		<h2 class="dashboard-title">SPIELER</h2>
+		<span class="player-count">{players.length}</span>
+	</div>
+
 	<div class="player-list">
 		{#if players.length === 0}
 			<div class="no-players">
-				<p>Noch keine Spieler registriert</p>
+				<div class="no-players-icon">🎄</div>
+				<p>Noch keine Spieler</p>
 			</div>
 		{:else}
-			{#each players as player (player.id)}
+			{#each players as player, index (player.id)}
 				{@const isActive = player.id === activeId}
-				{@const points = question?.points || 0}
 				<div class="player-card" class:active={isActive}>
-					<div class="player-info">
-						<span class="player-name">{player.name}</span>
-						<span class="player-score">{player.score}</span>
-					</div>
-					<div class="player-controls">
-						<div class="score-controls">
-							<button
-								class="btn-add"
-								on:click={() => updateScore(player.id, points)}
-								disabled={!question || points === 0}
-							>
-								+{points}
-							</button>
-							<button
-								class="btn-subtract"
-								on:click={() => updateScore(player.id, -points)}
-								disabled={!question || points === 0}
-							>
-								-{points}
-							</button>
+					<!-- Rank & Info -->
+					<div class="player-main">
+						<span class="player-rank">{getRankIcon(index)}</span>
+						<div class="player-info">
+							<span class="player-name">{player.name}</span>
+							<span class="player-score">{player.score} Punkte</span>
 						</div>
+					</div>
+
+					<!-- Controls -->
+					<div class="player-controls">
+						{#if question}
+							<button
+								class="btn-score btn-add"
+								on:click={() => updateScore(player.id, points)}
+								title="Punkte geben"
+							>
+								<span class="btn-symbol">+</span>
+								<span class="btn-value">{points}</span>
+							</button>
+							<button
+								class="btn-score btn-subtract"
+								on:click={() => updateScore(player.id, -points)}
+								title="Punkte abziehen"
+							>
+								<span class="btn-symbol">−</span>
+								<span class="btn-value">{points}</span>
+							</button>
+						{/if}
 						<button
 							class="btn-delete"
 							on:click={() => deletePlayer(player.id)}
-							title="Spieler löschen"
+							title="Spieler entfernen"
 						>
-							🗑️
+							✕
 						</button>
 					</div>
 				</div>
@@ -74,139 +93,219 @@
 
 <style>
 	.player-dashboard {
-		padding: 1rem;
-		background: rgba(15, 20, 25, 0.3);
-		border-radius: 12px;
-		margin-bottom: 1rem;
+		background: linear-gradient(145deg, 
+			rgba(20, 35, 50, 0.95) 0%,
+			rgba(15, 28, 40, 0.98) 100%
+		);
+		border-radius: 16px;
+		border: 1px solid rgba(212, 175, 55, 0.3);
+		overflow: hidden;
+		box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+	}
+
+	/* Header */
+	.dashboard-header {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		gap: 0.5rem;
+		padding: 0.75rem 1rem;
+		background: rgba(212, 175, 55, 0.1);
+		border-bottom: 1px solid rgba(212, 175, 55, 0.2);
+	}
+
+	.header-icon {
+		font-size: 1.2rem;
 	}
 
 	.dashboard-title {
-		font-size: 1.2rem;
-		margin-bottom: 1rem;
-		color: #fff8dc;
-		text-align: center;
+		font-size: 0.9rem;
+		font-weight: bold;
+		color: #d4af37;
+		margin: 0;
+		letter-spacing: 0.1em;
 	}
 
+	.player-count {
+		background: rgba(212, 175, 55, 0.2);
+		color: #d4af37;
+		font-size: 0.75rem;
+		font-weight: bold;
+		padding: 0.15rem 0.5rem;
+		border-radius: 10px;
+	}
+
+	/* Player List */
 	.player-list {
+		padding: 0.75rem;
 		display: flex;
 		flex-direction: column;
 		gap: 0.5rem;
+		max-height: 300px;
+		overflow-y: auto;
 	}
 
+	/* Scrollbar */
+	.player-list::-webkit-scrollbar {
+		width: 6px;
+	}
+
+	.player-list::-webkit-scrollbar-track {
+		background: rgba(255, 255, 255, 0.05);
+		border-radius: 3px;
+	}
+
+	.player-list::-webkit-scrollbar-thumb {
+		background: rgba(212, 175, 55, 0.3);
+		border-radius: 3px;
+	}
+
+	/* Player Card */
 	.player-card {
 		display: flex;
 		justify-content: space-between;
 		align-items: center;
-		padding: 1rem;
-		background: rgba(255, 255, 255, 0.05);
-		border-radius: 8px;
-		border-left: 4px solid transparent;
+		padding: 0.6rem 0.75rem;
+		background: rgba(255, 255, 255, 0.03);
+		border-radius: 10px;
+		border: 1px solid rgba(255, 255, 255, 0.05);
 		transition: all 0.2s ease;
 	}
 
+	.player-card:hover {
+		background: rgba(255, 255, 255, 0.06);
+	}
+
 	.player-card.active {
-		border-left-color: #ffd700;
 		background: rgba(255, 215, 0, 0.1);
-		box-shadow: 0 0 15px rgba(255, 215, 0, 0.3);
+		border-color: rgba(255, 215, 0, 0.4);
+		box-shadow: 0 0 15px rgba(255, 215, 0, 0.15);
+	}
+
+	/* Player Main */
+	.player-main {
+		display: flex;
+		align-items: center;
+		gap: 0.6rem;
+		flex: 1;
+		min-width: 0;
+	}
+
+	.player-rank {
+		font-size: 1.1rem;
+		width: 1.75rem;
+		text-align: center;
+		flex-shrink: 0;
 	}
 
 	.player-info {
 		display: flex;
 		flex-direction: column;
-		gap: 0.25rem;
-		flex: 1;
+		gap: 0.1rem;
+		min-width: 0;
 	}
 
 	.player-name {
-		font-weight: bold;
-		font-size: 1rem;
+		font-size: 0.9rem;
+		font-weight: 600;
 		color: #fff8dc;
+		white-space: nowrap;
+		overflow: hidden;
+		text-overflow: ellipsis;
 	}
 
 	.player-score {
-		font-size: 1.2rem;
+		font-size: 0.8rem;
+		color: #d4af37;
 		font-weight: bold;
-		color: #ffd700;
 	}
 
+	/* Controls */
 	.player-controls {
 		display: flex;
 		align-items: center;
-		gap: 0.5rem;
+		gap: 0.4rem;
+		flex-shrink: 0;
 	}
 
-	.score-controls {
+	.btn-score {
 		display: flex;
-		gap: 0.5rem;
-	}
-
-	.score-controls button {
-		padding: 0.5rem 1rem;
+		align-items: center;
+		gap: 0.2rem;
+		padding: 0.4rem 0.6rem;
 		border: none;
 		border-radius: 6px;
 		font-weight: bold;
 		cursor: pointer;
-		transition: all 0.2s ease;
-		min-height: 44px;
-		touch-action: manipulation;
+		transition: all 0.15s ease;
+		font-size: 0.8rem;
+	}
+
+	.btn-symbol {
 		font-size: 1rem;
+		font-weight: bold;
+	}
+
+	.btn-value {
+		font-size: 0.8rem;
 	}
 
 	.btn-add {
-		background: linear-gradient(135deg, #228b22, #32cd32);
+		background: linear-gradient(135deg, #228b22, #2a9d2a);
 		color: white;
 	}
 
-	.btn-add:hover:not(:disabled) {
-		background: linear-gradient(135deg, #32cd32, #228b22);
+	.btn-add:hover {
+		background: linear-gradient(135deg, #2a9d2a, #32cd32);
 		transform: scale(1.05);
 	}
 
 	.btn-subtract {
-		background: linear-gradient(135deg, #dc143c, #ff6347);
+		background: linear-gradient(135deg, #c41e3a, #dc143c);
 		color: white;
 	}
 
-	.btn-subtract:hover:not(:disabled) {
-		background: linear-gradient(135deg, #ff6347, #dc143c);
+	.btn-subtract:hover {
+		background: linear-gradient(135deg, #dc143c, #ff4040);
 		transform: scale(1.05);
 	}
 
-	.score-controls button:disabled {
-		opacity: 0.4;
-		cursor: not-allowed;
-	}
-
 	.btn-delete {
-		background: rgba(220, 20, 60, 0.3);
-		border: 2px solid #dc143c;
-		color: #fff8dc;
-		padding: 0.5rem;
-		border-radius: 6px;
-		cursor: pointer;
-		transition: all 0.2s ease;
-		min-height: 44px;
-		min-width: 44px;
-		font-size: 1.2rem;
-		touch-action: manipulation;
+		width: 28px;
+		height: 28px;
 		display: flex;
 		align-items: center;
 		justify-content: center;
+		background: rgba(255, 255, 255, 0.05);
+		border: 1px solid rgba(255, 255, 255, 0.1);
+		border-radius: 6px;
+		color: rgba(255, 248, 220, 0.5);
+		font-size: 0.9rem;
+		cursor: pointer;
+		transition: all 0.15s ease;
 	}
 
 	.btn-delete:hover {
-		background: rgba(220, 20, 60, 0.5);
-		transform: scale(1.1);
+		background: rgba(220, 20, 60, 0.3);
+		border-color: rgba(220, 20, 60, 0.5);
+		color: #ff6b6b;
 	}
 
-	.btn-delete:active {
-		transform: scale(0.95);
-	}
-
+	/* No Players */
 	.no-players {
-		padding: 2rem;
+		padding: 1.5rem;
 		text-align: center;
-		color: rgba(255, 248, 220, 0.5);
+		color: rgba(255, 248, 220, 0.4);
+	}
+
+	.no-players-icon {
+		font-size: 2rem;
+		margin-bottom: 0.5rem;
+		opacity: 0.5;
+	}
+
+	.no-players p {
+		margin: 0;
+		font-size: 0.9rem;
 	}
 </style>
-

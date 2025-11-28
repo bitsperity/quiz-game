@@ -8,10 +8,9 @@
 	import Login from '$lib/player-view/components/Login.svelte';
 	import Scoreboard from '$lib/player-view/components/Scoreboard.svelte';
 	import Buzzer from '$lib/player-view/components/Buzzer.svelte';
-	import QuestionComponent from '$lib/player-view/components/Question.svelte';
 	import { playerState, setPlayer, updatePlayers, logout, setCurrentQuestion, setBuzzerEnabled, setBuzzed } from '$lib/player-view/stores/playerState';
 	import { playerWebSocket } from '$lib/player-view/services/playerWebSocket';
-	import type { Player, Question } from '$lib/shared';
+	import type { Player } from '$lib/shared';
 
 	// Reaktive Variablen direkt aus Store
 	$: currentView = $playerState.currentView;
@@ -21,7 +20,6 @@
 	$: buzzerEnabled = $playerState.buzzerEnabled;
 	$: buzzed = $playerState.buzzed;
 	$: buzzerPosition = $playerState.buzzerPosition;
-	$: currentQuestion = $playerState.currentQuestion;
 
 	async function handleLogin(name: string) {
 		try {
@@ -156,12 +154,6 @@
 			</header>
 
 			<main class="main-content">
-				{#if currentQuestion}
-					<div class="question-section">
-						<QuestionComponent question={currentQuestion} />
-					</div>
-				{/if}
-
 				<div class="scoreboard-section">
 					<Scoreboard {players} currentPlayerId={playerId} />
 				</div>
@@ -249,10 +241,6 @@
 		display: flex;
 		flex-direction: column;
 		gap: 1rem;
-	}
-
-	.question-section {
-		flex: 0 0 auto;
 	}
 
 	.scoreboard-section {

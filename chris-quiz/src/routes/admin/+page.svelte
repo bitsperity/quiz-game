@@ -446,15 +446,52 @@
 		}
 	}
 
+	async function handleSyncMatrix() {
+		const currentToken = token || $page.url.searchParams.get('token');
+		if (!currentToken) {
+			alert('Kein Admin-Token gefunden. Bitte Seite neu laden mit ?token=SECRET_TOKEN');
+			return;
+		}
+
+		try {
+			const response = await fetch('/api/game/sync-matrix', {
+				method: 'POST',
+				headers: {
+					'X-Admin-Token': currentToken
+				}
+			});
+
+			if (response.ok) {
+				const data = await response.json();
+				if (data.success) {
+					// Reload game state to get updated matrix
+					await loadGameState();
+					alert(`Matrix synchronisiert! ${data.questionsCount} Fragen in ${data.categories?.length || 0} Kategorien.`);
+				}
+			} else {
+				const error = await response.json();
+				alert(`Fehler beim Synchronisieren: ${error.error || 'Unbekannter Fehler'}`);
+			}
+		} catch (error) {
+			console.error('[Admin] Fehler beim Synchronisieren der Matrix:', error);
+			alert('Fehler beim Synchronisieren der Matrix');
+		}
+	}
+
 	$: matrix = $gameState.questionMatrix;
 </script>
 
 <div class="admin-panel">
 	<header class="admin-header">
 		<h1>🎄 ADMIN CONTROL PANEL 🎄</h1>
-		<button class="btn-reset" on:click={handleResetGame} title="Spiel komplett zurücksetzen">
-			🔄 RESET GAME
-		</button>
+		<div class="header-buttons">
+			<button class="btn-sync" on:click={handleSyncMatrix} title="Matrix aus DB neu laden">
+				🔄 SYNC MATRIX
+			</button>
+			<button class="btn-reset" on:click={handleResetGame} title="Spiel komplett zurücksetzen">
+				🗑️ RESET GAME
+			</button>
+		</div>
 	</header>
 
 	<div class="admin-content">
@@ -508,6 +545,37 @@
 		color: #ffd700;
 		text-shadow: 0 2px 8px rgba(255, 215, 0, 0.5);
 		flex: 1;
+	}
+
+	.header-buttons {
+		display: flex;
+		gap: 0.75rem;
+		flex-wrap: wrap;
+	}
+
+	.btn-sync {
+		background: linear-gradient(135deg, #228b22, #32cd32);
+		color: white;
+		border: 2px solid #228b22;
+		padding: 0.75rem 1.5rem;
+		border-radius: 8px;
+		font-weight: bold;
+		font-size: 1rem;
+		cursor: pointer;
+		transition: all 0.2s ease;
+		min-height: 44px;
+		touch-action: manipulation;
+		box-shadow: 0 2px 8px rgba(34, 139, 34, 0.3);
+	}
+
+	.btn-sync:hover {
+		background: linear-gradient(135deg, #32cd32, #228b22);
+		transform: scale(1.05);
+		box-shadow: 0 4px 12px rgba(34, 139, 34, 0.5);
+	}
+
+	.btn-sync:active {
+		transform: scale(0.95);
 	}
 
 	.btn-reset {

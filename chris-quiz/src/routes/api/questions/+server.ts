@@ -2,11 +2,15 @@
  * API Route: Question Management
  * SOLID-Prinzip: Single Responsibility - Nur Question Management
  * Admin Bereich
+ * 
+ * WICHTIG: Diese Route verwendet jetzt die Datenbank als Single Source of Truth
+ * und synchronisiert den GameState nach Änderungen.
  */
 import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import type { Question } from '$lib/shared';
 import { getGameStateService } from '$lib/server/services/GameStateService';
+import { getQuestionRepository } from '$lib/server/services/QuestionRepository';
 
 function requireAdmin(request: Request): boolean {
 	const token =
@@ -18,32 +22,23 @@ function requireAdmin(request: Request): boolean {
 	return token === adminToken;
 }
 
-// GET: Alle Fragen abrufen
+// GET: Alle Fragen abrufen (aus DB - Single Source of Truth)
 export const GET: RequestHandler = async ({ request }) => {
 	if (!requireAdmin(request)) {
 		return json({ error: 'Unauthorized' }, { status: 401 });
 	}
 
 	try {
-		const gameStateService = getGameStateService();
-		const state = gameStateService.getState();
+		const questionRepo = getQuestionRepository();
+		const allQuestions = questionRepo.getAll();
 
-		// Sammle alle Fragen aus der Matrix (ohne Antworten)
-		const questions: Question[] = [];
-		for (const row of state.questionMatrix) {
-			for (const cell of row) {
-				if (cell.question) {
-					// Entferne Antwort aus Frage-Objekt bevor es gespeichert wird
-					const questionWithoutAnswer: Omit<Question, 'answer'> = {
-						id: cell.question.id,
-						category: cell.question.category,
-						points: cell.question.points,
-						question: cell.question.question
-					};
-					questions.push(questionWithoutAnswer as Question); // Cast back to Question for the array type
-				}
-			}
-		}
+		// Entferne Antworten für die API-Response
+		const questions = allQuestions.map(q => ({
+			id: q.id,
+			category: q.category,
+			points: q.points,
+			question: q.question
+		}));
 
 		return json({
 			questions,
@@ -55,7 +50,7 @@ export const GET: RequestHandler = async ({ request }) => {
 	}
 };
 
-// POST: Einzelne Frage erstellen
+// POST: Einzelne Frage erstellen (in DB + GameState sync)
 export const POST: RequestHandler = async ({ request }) => {
 	if (!requireAdmin(request)) {
 		return json({ error: 'Unauthorized' }, { status: 401 });
@@ -79,41 +74,27 @@ export const POST: RequestHandler = async ({ request }) => {
 			return json({ error: 'answer ist erforderlich' }, { status: 400 });
 		}
 
-		const gameStateService = getGameStateService();
-		const state = gameStateService.getState();
-
-		// Sammle alle vorhandenen Fragen
-		const existingQuestions: Question[] = [];
-		for (const row of state.questionMatrix) {
-			for (const cell of row) {
-				if (cell.question) {
-					existingQuestions.push(cell.question);
-				}
-			}
-		}
-
-		// Erstelle neue Frage (ohne Antwort im System zu speichern)
-		const newQuestion: Omit<Question, 'answer'> = {
-			id: `q_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-			category,
-			points,
-			question
-		};
-
-		// Für die Matrix brauchen wir die vollständige Frage mit Antwort (interne Verwendung)
-		const questionWithAnswer = {
-			...newQuestion,
-			answer: answer.trim(),
+		// Speichere in DB (Single Source of Truth)
+		const questionRepo = getQuestionRepository();
+		const newQuestion = questionRepo.create({
 			category: category.trim(),
-			question: question.trim()
-		};
+			points,
+			question: question.trim(),
+			answer: answer.trim()
+		});
 
-		// Füge neue Frage hinzu und initialisiere Matrix neu
-		existingQuestions.push(questionWithAnswer as any);
-		gameStateService.setQuestions(existingQuestions as any);
+		// Synchronisiere GameState mit DB
+		const gameStateService = getGameStateService();
+		gameStateService.rebuildMatrixFromDB();
 
 		return json({
-			question: newQuestion, // Antwort nicht zurückgeben
+			question: {
+				id: newQuestion.id,
+				category: newQuestion.category,
+				points: newQuestion.points,
+				question: newQuestion.question
+				// Antwort nicht zurückgeben
+			},
 			success: true
 		});
 	} catch (error) {

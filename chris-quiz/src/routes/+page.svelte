@@ -2,9 +2,9 @@
 	import { onMount } from 'svelte';
 
 	onMount(() => {
-		// Redirect to appropriate view based on query params or default to game view
+		// Redirect to appropriate view based on query params or default to player view
 		const urlParams = new URLSearchParams(window.location.search);
-		const view = urlParams.get('view') || 'game';
+		const view = urlParams.get('view') || 'player';
 		window.location.href = `/${view}`;
 	});
 </script>

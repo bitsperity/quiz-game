@@ -1,62 +1,63 @@
 <script lang="ts">
 	/**
-	 * Game Header Component
-	 * SOLID-Prinzip: Single Responsibility - Nur Header-Layout
-	 * Agent 1 Bereich
-	 * 
-	 * Layout:
-	 * [Title] | [Kategorie] [Punkte] | [Top 3 Spieler horizontal]
+	 * Game Header Component - Elegant Christmas Design
+	 * Kompaktes, professionelles Header mit Scoreboard
 	 */
 	import { gameViewState, sortedPlayers } from '../stores/gameViewState';
 
 	$: currentView = $gameViewState.currentView;
 	$: selectedQuestion = $gameViewState.selectedQuestion;
-	$: players = $sortedPlayers; // Verwende sortedPlayers für korrekte Sortierung nach Score
+	$: players = $sortedPlayers;
+
+	function getRankEmoji(index: number): string {
+		const emojis = ['🥇', '🥈', '🥉'];
+		return emojis[index] || `${index + 1}.`;
+	}
 </script>
 
 <header class="game-header">
-	<!-- Linke Seite: Titel -->
-	<div class="header-section header-left">
-		<h1 class="title">🎄 WEIHNACHTS-QUIZ 🎄</h1>
+	<!-- Logo/Title -->
+	<div class="header-logo">
+		<span class="logo-icon">🎄</span>
+		<div class="logo-text">
+			<span class="logo-main">WEIHNACHTS</span>
+			<span class="logo-sub">QUIZ</span>
+		</div>
+		<span class="logo-icon">🎄</span>
 	</div>
 
-	<!-- Mitte: Aktuelle Frage -->
+	<!-- Current Question Info (wenn Frage ausgewählt) -->
 	{#if selectedQuestion}
-		<div class="header-section header-center">
-			<div class="question-badge">
-				<span class="question-category">{selectedQuestion.category}</span>
-				<span class="question-separator">•</span>
-				<span class="question-points">💰 {selectedQuestion.points} Punkte</span>
+		<div class="current-question-info">
+			<div class="question-category-pill">
+				<span class="category-icon">📂</span>
+				<span class="category-name">{selectedQuestion.category}</span>
+			</div>
+			<div class="question-points-pill">
+				<span class="points-icon">⭐</span>
+				<span class="points-value">{selectedQuestion.points}</span>
 			</div>
 		</div>
 	{/if}
 
-	<!-- Rechte Seite: Top 3 Spieler -->
-	<div class="header-section header-right">
-		<div class="top-players">
-			{#each players.slice(0, 3) as player, index (player.id)}
-				<div class="top-player-card" style="--rank: {index}">
-					<div class="player-rank-badge">
-						{#if index === 0}
-							🥇
-						{:else if index === 1}
-							🥈
-						{:else}
-							🥉
-						{/if}
+	<!-- Scoreboard - Top Players -->
+	<div class="scoreboard-section">
+		{#if players.length > 0}
+			<div class="scoreboard-players">
+				{#each players.slice(0, 5) as player, index (player.id)}
+					<div class="player-chip" class:gold={index === 0} class:silver={index === 1} class:bronze={index === 2}>
+						<span class="player-rank">{getRankEmoji(index)}</span>
+						<span class="player-name">{player.name}</span>
+						<span class="player-score">{player.score}</span>
 					</div>
-					<div class="player-info">
-						<div class="player-name">{player.name}</div>
-						<div class="player-score">{player.score}</div>
-					</div>
-				</div>
-			{/each}
-			{#if players.length === 0}
-				<div class="empty-message">
-					Warte auf Spieler...
-				</div>
-			{/if}
-		</div>
+				{/each}
+			</div>
+		{:else}
+			<div class="waiting-players">
+				<span class="waiting-icon">👥</span>
+				<span class="waiting-text">Warte auf Spieler...</span>
+			</div>
+		{/if}
 	</div>
 </header>
 
@@ -66,226 +67,245 @@
 		top: 0;
 		left: 0;
 		right: 0;
-		height: 120px;
+		height: 80px;
 		display: flex;
 		align-items: center;
 		justify-content: space-between;
-		padding: 0.75rem 1.5rem;
-		background: rgba(15, 32, 39, 0.95);
-		backdrop-filter: blur(10px);
-		border-bottom: 1px solid var(--color-secondary);
+		padding: 0 2rem;
+		background: linear-gradient(180deg, 
+			rgba(10, 20, 28, 0.98) 0%, 
+			rgba(15, 35, 45, 0.95) 100%
+		);
+		backdrop-filter: blur(20px);
+		border-bottom: 2px solid;
+		border-image: linear-gradient(90deg, 
+			transparent, 
+			rgba(212, 175, 55, 0.6), 
+			rgba(255, 215, 0, 0.8), 
+			rgba(212, 175, 55, 0.6), 
+			transparent
+		) 1;
 		z-index: 100;
-		box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
-		gap: 1.5rem;
+		box-shadow: 
+			0 4px 30px rgba(0, 0, 0, 0.5),
+			0 0 60px rgba(212, 175, 55, 0.1);
 	}
 
-	.header-section {
-		display: flex;
-		align-items: center;
-		justify-content: center;
-	}
-
-	.header-left {
-		flex: 0 0 auto;
-		min-width: 250px;
-	}
-
-	.header-center {
-		flex: 1 1 auto;
-		min-width: 200px;
-		justify-content: center;
-	}
-
-	.header-right {
-		flex: 0 1 600px;
-		max-width: 600px;
-	}
-
-	.title {
-		font-family: var(--font-heading);
-		font-size: clamp(1.2rem, 2.5vw, 2rem);
-		font-weight: bold;
-		color: var(--color-secondary);
-		text-shadow: 0 2px 4px rgba(0,0,0,0.5);
-		margin: 0;
-		white-space: nowrap;
-		overflow: hidden;
-		text-overflow: ellipsis;
-	}
-
-	.question-badge {
+	/* Logo Section */
+	.header-logo {
 		display: flex;
 		align-items: center;
 		gap: 0.75rem;
+		flex-shrink: 0;
+	}
+
+	.logo-icon {
+		font-size: 2rem;
+		filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));
+		animation: gentle-glow 3s ease-in-out infinite;
+	}
+
+	.logo-text {
+		display: flex;
+		flex-direction: column;
+		line-height: 1;
+	}
+
+	.logo-main {
+		font-family: 'Georgia', serif;
+		font-size: 1.1rem;
+		font-weight: bold;
+		color: #d4af37;
+		letter-spacing: 0.15em;
+		text-shadow: 0 2px 8px rgba(212, 175, 55, 0.4);
+	}
+
+	.logo-sub {
+		font-family: 'Georgia', serif;
+		font-size: 1.4rem;
+		font-weight: bold;
+		color: #fff8dc;
+		letter-spacing: 0.3em;
+		text-shadow: 0 2px 8px rgba(255, 248, 220, 0.3);
+	}
+
+	/* Current Question Info */
+	.current-question-info {
+		display: flex;
+		align-items: center;
+		gap: 1rem;
 		padding: 0.5rem 1.5rem;
-		background: rgba(212, 175, 55, 0.1);
-		border: 1px solid var(--color-secondary);
+		background: rgba(212, 175, 55, 0.08);
 		border-radius: 50px;
-		backdrop-filter: blur(10px);
-		font-size: clamp(0.85rem, 1.5vw, 1.1rem);
-		white-space: nowrap;
-		overflow: hidden;
-		text-overflow: ellipsis;
+		border: 1px solid rgba(212, 175, 55, 0.3);
 	}
 
-	.question-category {
-		color: var(--color-text);
-		font-weight: bold;
-		letter-spacing: 0.5px;
-		font-family: var(--font-heading);
-	}
-
-	.question-separator {
-		color: var(--color-secondary);
-		font-weight: bold;
-	}
-
-	.question-points {
-		color: var(--color-secondary);
-		font-weight: bold;
-		font-family: var(--font-heading);
-	}
-
-	/* Top Players Display */
-	.top-players {
-		display: flex;
-		align-items: center;
-		gap: 0.75rem;
-		width: 100%;
-	}
-
-	.top-player-card {
+	.question-category-pill,
+	.question-points-pill {
 		display: flex;
 		align-items: center;
 		gap: 0.5rem;
-		padding: 0.5rem 0.75rem;
-		background: rgba(255, 255, 255, 0.05);
-		border-radius: 8px;
-		transition: all 0.2s ease;
-		border: 1px solid transparent;
-		flex: 1;
-		min-width: 0;
-		overflow: hidden;
+		font-size: 0.95rem;
 	}
 
-	.top-player-card:nth-child(1) {
-		background: linear-gradient(135deg, rgba(212, 175, 55, 0.2), rgba(212, 175, 55, 0.05));
-		border-color: var(--color-secondary);
+	.category-icon,
+	.points-icon {
+		font-size: 1.1rem;
 	}
 
-	.top-player-card:nth-child(2) {
-		background: rgba(192, 192, 192, 0.08);
-		border-color: rgba(192, 192, 192, 0.2);
+	.category-name {
+		color: #fff8dc;
+		font-weight: 600;
+		letter-spacing: 0.05em;
 	}
 
-	.top-player-card:nth-child(3) {
-		background: rgba(205, 127, 50, 0.08);
-		border-color: rgba(205, 127, 50, 0.2);
+	.points-value {
+		color: #d4af37;
+		font-weight: bold;
+		font-family: 'Georgia', serif;
 	}
 
-	.top-player-card:hover {
-		background: rgba(255, 255, 255, 0.1);
-		border-color: var(--color-secondary);
-		transform: translateY(-2px);
-	}
-
-	.player-rank-badge {
-		font-size: clamp(1.2rem, 2vw, 1.5rem);
-		flex-shrink: 0;
-		width: 1.8rem;
-		text-align: center;
-	}
-
-	.player-info {
+	/* Scoreboard Section */
+	.scoreboard-section {
 		display: flex;
-		flex-direction: column;
-		gap: 0.2rem;
-		min-width: 0;
-		flex: 1;
+		align-items: center;
+	}
+
+	.scoreboard-players {
+		display: flex;
+		gap: 0.5rem;
+	}
+
+	.player-chip {
+		display: flex;
+		align-items: center;
+		gap: 0.4rem;
+		padding: 0.4rem 0.75rem;
+		background: rgba(255, 255, 255, 0.05);
+		border-radius: 25px;
+		border: 1px solid rgba(255, 255, 255, 0.1);
+		transition: all 0.3s ease;
+		min-width: 100px;
+	}
+
+	.player-chip.gold {
+		background: linear-gradient(135deg, rgba(255, 215, 0, 0.2), rgba(212, 175, 55, 0.1));
+		border-color: rgba(255, 215, 0, 0.5);
+		box-shadow: 0 0 15px rgba(255, 215, 0, 0.2);
+	}
+
+	.player-chip.silver {
+		background: linear-gradient(135deg, rgba(192, 192, 192, 0.15), rgba(169, 169, 169, 0.08));
+		border-color: rgba(192, 192, 192, 0.4);
+	}
+
+	.player-chip.bronze {
+		background: linear-gradient(135deg, rgba(205, 127, 50, 0.15), rgba(184, 115, 51, 0.08));
+		border-color: rgba(205, 127, 50, 0.4);
+	}
+
+	.player-rank {
+		font-size: 1rem;
+		flex-shrink: 0;
 	}
 
 	.player-name {
-		color: var(--color-text);
-		font-size: clamp(0.75rem, 1.2vw, 0.95rem);
-		font-weight: 600;
+		color: #fff8dc;
+		font-size: 0.85rem;
+		font-weight: 500;
+		white-space: nowrap;
 		overflow: hidden;
 		text-overflow: ellipsis;
-		white-space: nowrap;
-		letter-spacing: 0.3px;
+		max-width: 80px;
 	}
 
 	.player-score {
-		color: var(--color-secondary);
-		font-size: clamp(0.7rem, 1vw, 0.85rem);
+		color: #d4af37;
+		font-size: 0.9rem;
 		font-weight: bold;
 		font-family: 'Courier New', monospace;
+		margin-left: auto;
 	}
 
-	.empty-message {
-		color: var(--color-text-muted);
-		font-size: 0.85rem;
-		text-align: center;
-		flex: 1;
-		padding: 0.5rem;
+	.waiting-players {
+		display: flex;
+		align-items: center;
+		gap: 0.5rem;
+		color: rgba(255, 248, 220, 0.5);
+		font-size: 0.9rem;
 		font-style: italic;
 	}
 
-	/* Responsive Design */
-	@media (max-width: 1600px) {
+	.waiting-icon {
+		font-size: 1.2rem;
+		opacity: 0.6;
+	}
+
+	@keyframes gentle-glow {
+		0%, 100% { filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3)) brightness(1); }
+		50% { filter: drop-shadow(0 2px 8px rgba(255,215,0,0.3)) brightness(1.1); }
+	}
+
+	/* Responsive */
+	@media (max-width: 1400px) {
 		.game-header {
-			gap: 1rem;
-			height: 110px;
-			padding: 0.5rem 1rem;
+			padding: 0 1.5rem;
 		}
-
-		.header-left {
-			min-width: 200px;
+		
+		.player-chip {
+			min-width: 90px;
 		}
-
-		.header-right {
-			max-width: 400px;
+		
+		.player-name {
+			max-width: 60px;
 		}
 	}
 
-	@media (max-width: 1200px) {
+	@media (max-width: 1100px) {
 		.game-header {
-			flex-wrap: wrap;
-			height: auto;
-			padding: 0.75rem 1rem;
-			gap: 0.75rem;
+			height: 70px;
+			padding: 0 1rem;
 		}
 
-		.header-left {
-			min-width: 100%;
-			order: 1;
+		.logo-icon {
+			font-size: 1.5rem;
 		}
 
-		.header-center {
-			min-width: 100%;
-			order: 2;
-			flex: 0 1 100%;
+		.logo-main {
+			font-size: 0.9rem;
 		}
 
-		.header-right {
-			min-width: 100%;
-			order: 3;
-			flex: 0 1 100%;
-			max-width: 100%;
+		.logo-sub {
+			font-size: 1.1rem;
+		}
+
+		.current-question-info {
+			padding: 0.4rem 1rem;
+		}
+
+		.player-chip {
+			padding: 0.3rem 0.5rem;
+			min-width: 80px;
 		}
 	}
 
-	@media (max-width: 768px) {
-		.top-players {
-			gap: 0.5rem;
+	@media (max-width: 900px) {
+		.current-question-info {
+			display: none;
 		}
 
-		.top-player-card {
-			padding: 0.4rem 0.5rem;
+		.scoreboard-players {
+			gap: 0.3rem;
 		}
 
-		.player-rank-badge {
-			font-size: 1rem;
+		.player-chip {
+			min-width: 70px;
+			padding: 0.25rem 0.4rem;
+		}
+
+		.player-name {
+			max-width: 50px;
+			font-size: 0.8rem;
 		}
 	}
 </style>
-
