@@ -102,7 +102,8 @@ class WebSocketServerManager {
 						payload.pointValue
 					);
 					if (question) {
-						console.log('[WebSocket Server] Frage ausgewählt, broadcast an alle Clients:', question);
+						console.log('[WebSocket Server] Frage ausgewählt (noch nicht revealed):', question.category, question.points);
+						// Broadcast question-selected - Game-View zeigt nur Matrix-Highlight
 						this.broadcast({
 							type: 'game:question-selected',
 							payload: { question }
@@ -111,6 +112,19 @@ class WebSocketServerManager {
 				}
 				break;
 
+			case 'admin:reveal-question':
+				{
+					const state = this.gameStateService.getState();
+					if (this.gameStateService.revealQuestion()) {
+						console.log('[WebSocket Server] Frage revealed, Buzzer aktiviert');
+						// Broadcast question-revealed - Game-View zeigt Frage, Buzzer aktiv
+						this.broadcast({
+							type: 'game:question-revealed',
+							payload: { question: state.selectedQuestion! }
+						});
+					}
+				}
+				break;
 
 			case 'admin:update-score':
 				if ('payload' in event && event.payload) {

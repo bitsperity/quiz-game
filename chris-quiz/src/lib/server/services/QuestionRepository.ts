@@ -46,12 +46,15 @@ export class QuestionRepository {
     }
 }
 
-// Singleton instance
-let instance: QuestionRepository | null = null;
+// Singleton Instance - Verwende globalThis für HMR-Kompatibilität
+declare global {
+    // eslint-disable-next-line no-var
+    var __questionRepositoryInstance: QuestionRepository | undefined;
+}
 
 export function getQuestionRepository(): QuestionRepository {
-    if (!instance) {
-        instance = new QuestionRepository();
+    if (!globalThis.__questionRepositoryInstance) {
+        globalThis.__questionRepositoryInstance = new QuestionRepository();
     }
-    return instance;
+    return globalThis.__questionRepositoryInstance;
 }

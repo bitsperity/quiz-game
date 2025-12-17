@@ -16,6 +16,7 @@ export interface PlayerState {
 	players: Player[];
 	currentQuestion: Question | null;
 	currentView: 'login' | 'game';
+	lastWebSocketUpdate: number; // Timestamp des letzten WebSocket-Updates für Buzzer-Status
 }
 
 const initialState: PlayerState = {
@@ -27,7 +28,8 @@ const initialState: PlayerState = {
 	buzzerPosition: null,
 	players: [],
 	currentQuestion: null,
-	currentView: 'login'
+	currentView: 'login',
+	lastWebSocketUpdate: 0
 };
 
 // Prüfe LocalStorage für gespeicherte Session
@@ -89,19 +91,29 @@ export function setCurrentQuestion(question: Question | null) {
 	}));
 }
 
-export function setBuzzerEnabled(enabled: boolean) {
+export function setBuzzerEnabled(enabled: boolean, fromWebSocket: boolean = false) {
 	playerState.update((state) => ({
 		...state,
 		buzzerEnabled: enabled,
 		// Reset buzzed state wenn Buzzer deaktiviert wird
 		buzzed: enabled ? state.buzzed : false,
-		buzzerPosition: enabled ? state.buzzerPosition : null
+		buzzerPosition: enabled ? state.buzzerPosition : null,
+		// Setze Timestamp nur wenn von WebSocket
+		lastWebSocketUpdate: fromWebSocket ? Date.now() : state.lastWebSocketUpdate
 	}));
 	
 	// Wenn Buzzer deaktiviert wird, setze buzzed explizit auf null
 	if (!enabled) {
 		setBuzzed(null);
 	}
+}
+
+export function getLastWebSocketUpdate(): number {
+	let timestamp = 0;
+	playerState.subscribe(state => {
+		timestamp = state.lastWebSocketUpdate;
+	})();
+	return timestamp;
 }
 
 export function setBuzzed(position: number | null) {

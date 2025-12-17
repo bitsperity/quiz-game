@@ -5,6 +5,7 @@ services:
       dockerfile: Dockerfile.dev
     ports:
       - "54321:54321"
+      - "24678:24678"  # HMR WebSocket Port
     volumes:
       - ./data:/app/data
       - ./src:/app/src
@@ -28,7 +29,7 @@ services:
     restart: unless-stopped
     networks:
       - quiz-network
-    command: npm run dev:server
+    command: npm run dev -- --host 0.0.0.0
 
 networks:
   quiz-network:

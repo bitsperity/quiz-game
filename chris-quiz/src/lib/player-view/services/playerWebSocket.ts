@@ -77,7 +77,9 @@ class PlayerWebSocketService {
 			const players: Player[] = Array.isArray(data.players) ? data.players : [];
 			updatePlayers(players);
 			setCurrentQuestion(data.selectedQuestion || null);
-			setBuzzerEnabled(data.currentView === 'question-hidden');
+			// NICHT fromWebSocket weil das hier REST ist - aber syncFromServer wird
+			// nur beim Connect aufgerufen, also ist es OK den Buzzer-Status zu setzen
+			setBuzzerEnabled(data.currentView === 'question-hidden', false);
 			const s = get(playerState);
 			if (s.playerId && Array.isArray(data.buzzerQueue)) {
 				const idx = data.buzzerQueue.findIndex((e: BuzzerEntry) => e.playerId === s.playerId);
@@ -215,28 +217,41 @@ class PlayerWebSocketService {
 		// Automatisches State-Update für Player View Events
 		switch (event.type) {
 			case 'game:question-selected':
-				// Buzzer aktivieren wenn Frage ausgewählt wurde
+				// Frage wurde ausgewählt, aber noch NICHT revealed
+				// Buzzer bleibt INAKTIV bis game:question-revealed kommt!
 				if ('payload' in event && event.payload) {
 					const payload = event.payload as { question: Question };
-					console.log('[Player View WS] ✅ Frage ausgewählt:', payload.question.id);
+					console.log('[Player View WS] 🎯 Frage ausgewählt (noch nicht revealed):', payload.question.id);
 					setCurrentQuestion(payload.question);
-					setBuzzerEnabled(true);
-					setBuzzed(null); // Reset buzzed state (null = nicht gebuzzt)
-				} else {
-					console.warn('[Player View WS] ⚠️ game:question-selected ohne Payload!');
+					// WICHTIG: Buzzer wird NICHT aktiviert - erst bei game:question-revealed
+					// fromWebSocket=true damit Polling den Status nicht überschreibt
+					setBuzzerEnabled(false, true);
+					setBuzzed(null);
+				}
+				break;
+
+			case 'game:question-revealed':
+				// Frage wurde revealed - JETZT Buzzer aktivieren!
+				if ('payload' in event && event.payload) {
+					const payload = event.payload as { question: Question };
+					console.log('[Player View WS] ✅ Frage revealed - Buzzer AKTIV:', payload.question.id);
+					setCurrentQuestion(payload.question);
+					// fromWebSocket=true damit Polling den Status nicht überschreibt
+					setBuzzerEnabled(true, true);
+					setBuzzed(null);
 				}
 				break;
 
 			case 'game:return-to-matrix':
 				// Zurück zur Matrix - Buzzer zurücksetzen
-				setBuzzerEnabled(false);
+				setBuzzerEnabled(false, true);
 				setBuzzed(null);
 				setCurrentQuestion(null);
 				break;
 
 			case 'game:reset':
 				// Spiel wurde zurückgesetzt - alles zurücksetzen
-				setBuzzerEnabled(false);
+				setBuzzerEnabled(false, true);
 				setBuzzed(null);
 				setCurrentQuestion(null);
 				// WICHTIG: Spieler-Liste wird von Polling aktualisiert (Single Source of Truth)
@@ -301,7 +316,7 @@ class PlayerWebSocketService {
 			case 'state:sync':
 				if ('payload' in event && event.payload) {
 					const payload = event.payload as {
-						currentView: 'matrix' | 'question-hidden' | 'question-reveal';
+						currentView: 'matrix' | 'question-selected' | 'question-hidden' | 'question-reveal';
 						selectedQuestion: Question | null;
 						players: Player[] | Map<string, Player>;
 						buzzerQueue: BuzzerEntry[];
@@ -373,9 +388,10 @@ class PlayerWebSocketService {
 					setCurrentQuestion(payload.selectedQuestion || null);
 					
 					// Setze Buzzer-Status basierend auf currentView
-					// Buzzer ist nur aktiv wenn question-hidden (nicht bei question-reveal oder matrix)
+					// Buzzer ist nur aktiv wenn question-hidden (nicht bei question-reveal, question-selected oder matrix)
 					const buzzerEnabled = payload.currentView === 'question-hidden';
-					setBuzzerEnabled(buzzerEnabled);
+					// fromWebSocket=true weil state:sync auch vom WebSocket kommt
+					setBuzzerEnabled(buzzerEnabled, true);
 					
 					// Prüfe ob dieser Spieler bereits gebuzzt hat
 					if (this.playerId && payload.buzzerQueue) {

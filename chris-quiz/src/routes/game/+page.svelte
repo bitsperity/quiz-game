@@ -31,25 +31,59 @@
 		};
 	});
 
+	// Grace Period in ms - nach einem WebSocket-Update wird das Polling ignoriert
+	const WEBSOCKET_GRACE_PERIOD = 1500;
+
 	async function loadGameState() {
 		try {
 			const response = await fetch('/api/game/state');
 			if (response.ok) {
 				const data = await response.json();
 				
-				gameViewState.set({
-					currentView:
-						data.currentView === 'question-hidden'
-							? 'question'
-							: 'matrix',
-					selectedQuestion: data.selectedQuestion || null,
-					selectedAnswer: null,
-					buzzerQueue: Array.isArray(data.buzzerQueue) ? data.buzzerQueue : [],
-					players: Array.isArray(data.players) ? data.players : [],
-					matrix: Array.isArray(data.questionMatrix) ? data.questionMatrix : [],
-					categories: Array.isArray(data.categories) ? data.categories : [],
-					gamePhase: data.gamePhase || 'idle'
-				});
+				// Konvertiere Server-View zu Game-View
+				// question-selected: Matrix mit Highlight, keine Frage
+				// question-hidden: Frage wird angezeigt, Buzzer aktiv
+				let viewState: 'matrix' | 'question' = 'matrix';
+				if (data.currentView === 'question-hidden' || data.currentView === 'question-reveal') {
+					viewState = 'question';
+				}
+				// Bei 'question-selected' bleibt es 'matrix' mit Highlight
+				
+				// WICHTIG: Prüfe ob kürzlich ein WebSocket-Update kam
+				// Wenn ja, überschreibe currentView NICHT - WebSocket hat Priorität!
+				const currentState = $gameViewState;
+				const timeSinceLastWsUpdate = Date.now() - currentState.lastWebSocketUpdate;
+				const isWithinGracePeriod = timeSinceLastWsUpdate < WEBSOCKET_GRACE_PERIOD;
+				
+				if (isWithinGracePeriod) {
+					// Innerhalb der Grace Period: Nur Daten updaten, NICHT currentView
+					gameViewState.update(state => ({
+						...state,
+						// currentView: NICHT überschreiben!
+						selectedQuestion: data.selectedQuestion || null,
+						buzzerQueue: Array.isArray(data.buzzerQueue) ? data.buzzerQueue : [],
+						players: Array.isArray(data.players) ? data.players : [],
+						matrix: Array.isArray(data.questionMatrix) ? data.questionMatrix : [],
+						categories: Array.isArray(data.categories) ? data.categories : [],
+						gamePhase: data.gamePhase || 'idle',
+						serverView: data.currentView || 'matrix'
+						// lastWebSocketUpdate: NICHT ändern!
+					}));
+				} else {
+					// Außerhalb der Grace Period: Komplett überschreiben
+					gameViewState.set({
+						currentView: viewState,
+						selectedQuestion: data.selectedQuestion || null,
+						selectedAnswer: null,
+						buzzerQueue: Array.isArray(data.buzzerQueue) ? data.buzzerQueue : [],
+						players: Array.isArray(data.players) ? data.players : [],
+						matrix: Array.isArray(data.questionMatrix) ? data.questionMatrix : [],
+						categories: Array.isArray(data.categories) ? data.categories : [],
+						gamePhase: data.gamePhase || 'idle',
+						serverView: data.currentView || 'matrix',
+						lastWebSocketUpdate: currentState.lastWebSocketUpdate // Behalte den Timestamp
+					});
+				}
 			}
 		} catch (error) {
 			console.error('[Game View] Fehler beim Laden des Game States:', error);
@@ -63,6 +97,8 @@
 	$: currentView = $gameViewState.currentView;
 	$: selectedQuestion = $gameViewState.selectedQuestion;
 	$: matrix = $gameViewState.matrix;
+	$: serverView = $gameViewState.serverView;
+	$: isQuestionSelected = serverView === 'question-selected';
 </script>
 
 <svelte:head>
@@ -95,6 +131,20 @@
 	<main class="main-content">
 		{#if currentView === 'matrix'}
 			<Matrix {matrix} />
+			
+			<!-- Overlay wenn Frage ausgewählt aber noch nicht revealed -->
+			{#if isQuestionSelected && selectedQuestion}
+				<div class="question-preview-overlay">
+					<div class="preview-content">
+						<div class="preview-badge">
+							<span class="preview-icon">🎯</span>
+							<span class="preview-category">{selectedQuestion.category}</span>
+							<span class="preview-points">{selectedQuestion.points} Punkte</span>
+						</div>
+						<p class="preview-hint">Warte auf Moderator...</p>
+					</div>
+				</div>
+			{/if}
 		{:else if currentView === 'question'}
 			<Question question={selectedQuestion} />
 		{/if}
@@ -293,10 +343,103 @@
 		50% { transform: translateY(-10px); }
 	}
 
+	/* Question Preview Overlay */
+	.question-preview-overlay {
+		position: absolute;
+		bottom: 2rem;
+		left: 50%;
+		transform: translateX(-50%);
+		z-index: 50;
+		animation: slide-up 0.5s ease-out;
+	}
+
+	@keyframes slide-up {
+		from {
+			opacity: 0;
+			transform: translateX(-50%) translateY(20px);
+		}
+		to {
+			opacity: 1;
+			transform: translateX(-50%) translateY(0);
+		}
+	}
+
+	.preview-content {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		gap: 0.75rem;
+		padding: 1.5rem 3rem;
+		background: linear-gradient(180deg, 
+			rgba(25, 40, 55, 0.95) 0%, 
+			rgba(15, 25, 40, 0.98) 100%
+		);
+		border-radius: 16px;
+		border: 2px solid rgba(212, 175, 55, 0.4);
+		box-shadow: 
+			0 10px 40px rgba(0, 0, 0, 0.5),
+			0 0 60px rgba(212, 175, 55, 0.15);
+		backdrop-filter: blur(10px);
+	}
+
+	.preview-badge {
+		display: flex;
+		align-items: center;
+		gap: 1rem;
+	}
+
+	.preview-icon {
+		font-size: 2rem;
+		animation: pulse-icon 1.5s ease-in-out infinite;
+	}
+
+	@keyframes pulse-icon {
+		0%, 100% { transform: scale(1); }
+		50% { transform: scale(1.1); }
+	}
+
+	.preview-category {
+		font-family: 'Georgia', serif;
+		font-size: 1.5rem;
+		font-weight: bold;
+		color: #d4af37;
+		text-transform: uppercase;
+		letter-spacing: 0.1em;
+	}
+
+	.preview-points {
+		font-family: 'Georgia', serif;
+		font-size: 1.25rem;
+		color: #ffd700;
+		padding: 0.3rem 0.8rem;
+		background: rgba(255, 215, 0, 0.1);
+		border-radius: 8px;
+		border: 1px solid rgba(255, 215, 0, 0.3);
+	}
+
+	.preview-hint {
+		font-size: 1rem;
+		color: rgba(255, 248, 220, 0.6);
+		margin: 0;
+		animation: blink 1.5s ease-in-out infinite;
+	}
+
 	/* Responsive */
 	@media (max-width: 1100px) {
 		.main-content {
 			top: 70px;
+		}
+
+		.preview-content {
+			padding: 1rem 2rem;
+		}
+
+		.preview-category {
+			font-size: 1.2rem;
+		}
+
+		.preview-points {
+			font-size: 1rem;
 		}
 	}
 </style>

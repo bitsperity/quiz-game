@@ -25,7 +25,6 @@
 
 <div class="mini-matrix">
 	{#if matrix.length > 0 && numCategories > 0 && matrixPointValues.length > 0}
-		<!-- Category Header Row -->
 		<div class="matrix-header" style="--cols: {numCategories}">
 			<div class="header-spacer"></div>
 			{#each categories as category, idx}
@@ -35,7 +34,6 @@
 			{/each}
 		</div>
 
-		<!-- Matrix Rows -->
 		{#each matrixPointValues as pointValue, rowIndex}
 			<div class="matrix-row" style="--cols: {numCategories}">
 				<div class="point-label">{pointValue}</div>
@@ -52,9 +50,9 @@
 						title="{categories[categoryIndex]} - {pointValue}"
 					>
 						{#if cell?.state === 'completed'}
-							<span class="cell-check">✓</span>
+							<i class="fas fa-check cell-icon"></i>
 						{:else if cell?.state === 'selected'}
-							<span class="cell-active">▶</span>
+							<i class="fas fa-play cell-icon active"></i>
 						{:else if cell?.question}
 							<span class="cell-points">{pointValue}</span>
 						{:else}
@@ -66,7 +64,7 @@
 		{/each}
 	{:else}
 		<div class="empty-matrix">
-			<div class="empty-icon">🎄</div>
+			<i class="fas fa-th empty-icon"></i>
 			<p>Keine Matrix-Daten</p>
 			<p class="empty-hint">Fragen im Admin-Panel hinzufügen</p>
 		</div>
@@ -75,25 +73,26 @@
 
 <style>
 	.mini-matrix {
-		background: linear-gradient(145deg, 
-			rgba(20, 35, 50, 0.95) 0%,
-			rgba(15, 28, 40, 0.98) 100%
-		);
-		border-radius: 16px;
-		border: 1px solid rgba(212, 175, 55, 0.3);
-		padding: 1rem;
-		overflow-x: auto;
-		box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+		height: 100%;
+		display: flex;
+		flex-direction: column;
+		background: linear-gradient(180deg, rgba(18, 24, 30, 0.98) 0%, rgba(12, 18, 24, 0.99) 100%);
+		border-radius: 10px;
+		border: 1px solid rgba(212, 175, 55, 0.15);
+		padding: 0.6rem;
+		overflow: hidden;
+		box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.03);
+		box-sizing: border-box;
 	}
 
-	/* Category Header */
 	.matrix-header {
+		flex-shrink: 0;
 		display: grid;
-		grid-template-columns: 3rem repeat(var(--cols), 1fr);
-		gap: 0.4rem;
-		margin-bottom: 0.5rem;
-		padding-bottom: 0.5rem;
-		border-bottom: 1px solid rgba(212, 175, 55, 0.2);
+		grid-template-columns: 2.2rem repeat(var(--cols), 1fr);
+		gap: 0.35rem;
+		margin-bottom: 0.4rem;
+		padding-bottom: 0.4rem;
+		border-bottom: 1px solid rgba(212, 175, 55, 0.12);
 	}
 
 	.header-spacer {
@@ -101,166 +100,170 @@
 	}
 
 	.category-label {
-		font-size: 0.65rem;
-		font-weight: bold;
+		font-family: 'Cinzel', serif;
+		font-size: 0.55rem;
+		font-weight: 600;
 		color: #d4af37;
 		text-align: center;
 		text-transform: uppercase;
-		letter-spacing: 0.05em;
-		padding: 0.3rem 0.2rem;
-		background: rgba(212, 175, 55, 0.1);
-		border-radius: 6px;
+		letter-spacing: 0.02em;
+		padding: 0.25rem 0.2rem;
+		background: linear-gradient(180deg, rgba(212, 175, 55, 0.1) 0%, rgba(212, 175, 55, 0.05) 100%);
+		border: 1px solid rgba(212, 175, 55, 0.15);
+		border-radius: 4px;
 		white-space: nowrap;
 		overflow: hidden;
 		text-overflow: ellipsis;
 		min-width: 0;
 	}
 
-	/* Matrix Row */
 	.matrix-row {
+		flex: 1;
 		display: grid;
-		grid-template-columns: 3rem repeat(var(--cols), 1fr);
-		gap: 0.4rem;
-		margin-bottom: 0.4rem;
+		grid-template-columns: 2.2rem repeat(var(--cols), 1fr);
+		gap: 0.35rem;
+		margin-bottom: 0.35rem;
+		min-height: 0;
+	}
+
+	.matrix-row:last-child {
+		margin-bottom: 0;
 	}
 
 	.point-label {
 		display: flex;
 		align-items: center;
 		justify-content: center;
-		font-weight: bold;
-		font-size: 0.8rem;
-		color: #d4af37;
+		font-weight: 700;
+		font-size: 0.7rem;
+		color: rgba(212, 175, 55, 0.8);
 	}
 
-	/* Matrix Cell */
 	.matrix-cell {
-		aspect-ratio: 1.2;
 		display: flex;
 		align-items: center;
 		justify-content: center;
-		border-radius: 8px;
-		font-weight: bold;
+		border-radius: 6px;
+		font-weight: 600;
 		cursor: pointer;
-		transition: all 0.2s ease;
+		transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 		touch-action: manipulation;
-		border: 2px solid rgba(255, 255, 255, 0.1);
-		background: linear-gradient(145deg, 
-			rgba(30, 60, 80, 0.8) 0%,
-			rgba(25, 50, 70, 0.9) 100%
-		);
+		-webkit-tap-highlight-color: transparent;
+		border: 1px solid rgba(212, 175, 55, 0.2);
+		background: linear-gradient(180deg, rgba(30, 50, 65, 0.9) 0%, rgba(20, 35, 45, 0.95) 100%);
 		color: #d4af37;
-		min-height: 40px;
-		font-size: 0.85rem;
+		min-height: 44px;
+		font-size: 0.75rem;
 	}
 
 	.matrix-cell.available {
-		border-color: rgba(212, 175, 55, 0.3);
+		border-color: rgba(212, 175, 55, 0.25);
 	}
 
 	.matrix-cell.available:hover:not(:disabled) {
-		transform: scale(1.08);
-		border-color: rgba(212, 175, 55, 0.8);
-		box-shadow: 0 4px 15px rgba(212, 175, 55, 0.3);
-		background: linear-gradient(145deg, 
-			rgba(40, 80, 100, 0.9) 0%,
-			rgba(30, 60, 80, 0.95) 100%
-		);
+		transform: translateY(-2px);
+		border-color: rgba(212, 175, 55, 0.6);
+		box-shadow: 0 4px 16px rgba(212, 175, 55, 0.2);
+		background: linear-gradient(180deg, rgba(40, 65, 85, 0.95) 0%, rgba(30, 50, 65, 1) 100%);
 	}
 
 	.matrix-cell.selected {
-		border: 3px solid #ffd700;
-		box-shadow: 0 0 20px rgba(255, 215, 0, 0.5);
-		background: rgba(255, 215, 0, 0.2);
-		animation: pulse-selected 1.5s ease-in-out infinite;
+		border: 2px solid rgba(212, 175, 55, 0.8);
+		box-shadow: 0 0 20px rgba(212, 175, 55, 0.3);
+		background: linear-gradient(135deg, rgba(212, 175, 55, 0.15) 0%, rgba(212, 175, 55, 0.08) 100%);
+		animation: pulse-selected 2s ease-in-out infinite;
 	}
 
 	.matrix-cell.completed {
-		background: rgba(50, 50, 60, 0.5);
-		border-color: rgba(255, 255, 255, 0.05);
+		background: rgba(30, 35, 40, 0.6);
+		border-color: rgba(255, 255, 255, 0.03);
 		cursor: not-allowed;
 	}
 
 	.matrix-cell:disabled {
 		cursor: not-allowed;
-		opacity: 0.4;
+		opacity: 0.35;
 	}
 
-	/* Cell Content */
-	.cell-check {
-		color: rgba(100, 200, 100, 0.6);
-		font-size: 1.1rem;
+	.cell-icon {
+		font-size: 0.75rem;
 	}
 
-	.cell-active {
-		color: #ffd700;
-		font-size: 1rem;
-		animation: blink 0.8s ease-in-out infinite;
+	.cell-icon.active {
+		color: #d4af37;
+		animation: blink 1s ease-in-out infinite;
+	}
+
+	.matrix-cell.completed .cell-icon {
+		color: rgba(168, 213, 162, 0.5);
 	}
 
 	.cell-points {
-		font-size: 0.9rem;
-	}
-
-	.cell-empty {
-		opacity: 0.3;
 		font-size: 0.8rem;
 	}
 
-	/* Empty State */
+	.cell-empty {
+		opacity: 0.2;
+		font-size: 0.7rem;
+	}
+
 	.empty-matrix {
-		padding: 2rem;
+		flex: 1;
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		justify-content: center;
 		text-align: center;
+		color: rgba(255, 255, 255, 0.3);
 	}
 
 	.empty-icon {
-		font-size: 2rem;
-		margin-bottom: 0.5rem;
-		opacity: 0.5;
+		font-size: 1.8rem;
+		margin-bottom: 0.6rem;
+		opacity: 0.4;
 	}
 
 	.empty-matrix p {
 		margin: 0;
-		color: rgba(255, 248, 220, 0.5);
+		font-size: 0.8rem;
 	}
 
 	.empty-hint {
-		font-size: 0.8rem;
+		font-size: 0.7rem;
 		margin-top: 0.3rem !important;
-		color: rgba(255, 248, 220, 0.3) !important;
+		color: rgba(255, 255, 255, 0.2) !important;
+		font-style: italic;
 	}
 
-	/* Animations */
 	@keyframes pulse-selected {
-		0%, 100% { box-shadow: 0 0 20px rgba(255, 215, 0, 0.5); }
-		50% { box-shadow: 0 0 30px rgba(255, 215, 0, 0.8); }
+		0%, 100% { box-shadow: 0 0 20px rgba(212, 175, 55, 0.3); }
+		50% { box-shadow: 0 0 30px rgba(212, 175, 55, 0.5); }
 	}
 
 	@keyframes blink {
 		0%, 100% { opacity: 1; }
-		50% { opacity: 0.5; }
+		50% { opacity: 0.4; }
 	}
 
-	/* Responsive */
-	@media (max-width: 600px) {
+	@media (orientation: portrait) and (max-width: 900px) {
 		.matrix-header,
 		.matrix-row {
-			grid-template-columns: 2.5rem repeat(var(--cols), 1fr);
-			gap: 0.3rem;
+			grid-template-columns: 2rem repeat(var(--cols), 1fr);
+			gap: 0.25rem;
 		}
 
 		.category-label {
-			font-size: 0.55rem;
-			padding: 0.2rem;
+			font-size: 0.45rem;
+			padding: 0.15rem;
 		}
 
 		.matrix-cell {
-			min-height: 35px;
-			font-size: 0.75rem;
+			min-height: 40px;
+			font-size: 0.65rem;
 		}
 
 		.point-label {
-			font-size: 0.7rem;
+			font-size: 0.6rem;
 		}
 	}
 </style>

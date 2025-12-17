@@ -80,30 +80,54 @@ class GameViewWebSocketService {
 		// Automatisches State-Update für Game View Events
 		switch (event.type) {
 			case 'game:question-selected':
+				// Frage ist ausgewählt aber noch nicht revealed - Matrix mit Highlight zeigen
 				if ('payload' in event && event.payload) {
 					const payload = event.payload as { question: Question };
+					console.log('[Game View WS] 🎯 Frage selected (noch nicht revealed):', payload.question.category);
+					gameViewState.update((state) => ({
+						...state,
+						currentView: 'matrix', // Bleibt auf Matrix!
+						serverView: 'question-selected',
+						selectedQuestion: payload.question,
+						buzzerQueue: [],
+						lastWebSocketUpdate: Date.now()
+					}));
+				}
+				break;
+
+			case 'game:question-revealed':
+				// Frage wurde revealed - jetzt Frage anzeigen
+				if ('payload' in event && event.payload) {
+					const payload = event.payload as { question: Question };
+					console.log('[Game View WS] ✅ Frage REVEALED:', payload.question.category);
 					gameViewState.update((state) => ({
 						...state,
 						currentView: 'question',
+						serverView: 'question-hidden',
 						selectedQuestion: payload.question,
-						buzzerQueue: []
+						lastWebSocketUpdate: Date.now()
 					}));
 				}
 				break;
 
 			case 'game:return-to-matrix':
+				console.log('[Game View WS] ⬅️ Return to Matrix');
 				gameViewState.update((state) => ({
 					...state,
 					currentView: 'matrix',
+					serverView: 'matrix',
 					selectedQuestion: null,
 					selectedAnswer: null,
-					buzzerQueue: []
+					buzzerQueue: [],
+					lastWebSocketUpdate: Date.now()
 				}));
 				break;
 
 			case 'game:reset':
+				console.log('[Game View WS] 🔄 Game Reset');
 				gameViewState.update((state) => ({
 					currentView: 'matrix',
+					serverView: 'matrix',
 					selectedQuestion: null,
 					selectedAnswer: null,
 					buzzerQueue: [],
@@ -115,7 +139,8 @@ class GameViewWebSocketService {
 						}))
 					), // Matrix behalten, aber Zellen auf 'available' zurücksetzen
 					categories: [],
-					gamePhase: 'idle'
+					gamePhase: 'idle',
+					lastWebSocketUpdate: Date.now()
 				}));
 				break;
 
@@ -124,7 +149,8 @@ class GameViewWebSocketService {
 					const buzzerEntry = event.payload as BuzzerEntry;
 					gameViewState.update((state) => ({
 						...state,
-						buzzerQueue: [...state.buzzerQueue, buzzerEntry]
+						buzzerQueue: [...state.buzzerQueue, buzzerEntry],
+						lastWebSocketUpdate: Date.now()
 					}));
 				}
 				break;
@@ -136,7 +162,8 @@ class GameViewWebSocketService {
 						...state,
 						players: state.players.map((p) =>
 							p.id === payload.playerId ? { ...p, score: payload.newScore } : p
-						)
+						),
+						lastWebSocketUpdate: Date.now()
 					}));
 				}
 				break;
@@ -153,7 +180,8 @@ class GameViewWebSocketService {
 						return {
 							...state,
 							players: newPlayers,
-							buzzerQueue: state.buzzerQueue.filter((entry) => entry.playerId !== payload.playerId)
+							buzzerQueue: state.buzzerQueue.filter((entry) => entry.playerId !== payload.playerId),
+							lastWebSocketUpdate: Date.now()
 						};
 					});
 				}
@@ -162,7 +190,7 @@ class GameViewWebSocketService {
 			case 'state:sync':
 				if ('payload' in event && event.payload) {
 					const payload = event.payload as {
-						currentView: 'matrix' | 'question-hidden' | 'question-reveal';
+						currentView: 'matrix' | 'question-selected' | 'question-hidden' | 'question-reveal';
 						selectedQuestion: Question | null;
 						players: Player[];
 						buzzerQueue: BuzzerEntry[];
@@ -171,12 +199,15 @@ class GameViewWebSocketService {
 						gamePhase: 'idle' | 'question' | 'answering' | 'scoring';
 					};
 					// Map shared GameState view to local GameViewState view
+					// question-selected = Matrix mit Highlight (Frage noch nicht sichtbar)
+					// question-hidden = Frage sichtbar, Buzzer aktiv
 					let localView: 'matrix' | 'question' | 'answer' = 'matrix';
 					if (payload.currentView === 'question-hidden') {
 						localView = 'question';
 					} else if (payload.currentView === 'question-reveal') {
 						localView = 'answer';
 					}
+					// question-selected bleibt 'matrix' (mit Highlight)
 
 					gameViewState.set({
 						currentView: localView,
@@ -185,8 +216,10 @@ class GameViewWebSocketService {
 						players: Array.isArray(payload.players) ? payload.players : [],
 						buzzerQueue: payload.buzzerQueue,
 						matrix: payload.questionMatrix,
-						categories: payload.categories || [], // Ensure it's an array
-						gamePhase: payload.gamePhase
+						categories: payload.categories || [],
+						gamePhase: payload.gamePhase,
+						serverView: payload.currentView,
+						lastWebSocketUpdate: Date.now()
 					});
 				}
 				break;

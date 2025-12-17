@@ -15,6 +15,8 @@ export interface GameViewState {
 	matrix: MatrixCell[][];
 	categories: string[];
 	gamePhase: 'idle' | 'question' | 'answering' | 'scoring';
+	serverView: 'matrix' | 'question-selected' | 'question-hidden' | 'question-reveal';
+	lastWebSocketUpdate: number; // Timestamp des letzten WebSocket-Updates
 }
 
 const initialState: GameViewState = {
@@ -25,7 +27,9 @@ const initialState: GameViewState = {
 	players: [],
 	matrix: [],
 	categories: [],
-	gamePhase: 'idle'
+	gamePhase: 'idle',
+	serverView: 'matrix',
+	lastWebSocketUpdate: 0
 };
 
 export const gameViewState = writable<GameViewState>(initialState);

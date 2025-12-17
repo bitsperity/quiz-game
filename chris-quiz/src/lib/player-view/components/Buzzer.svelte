@@ -1,7 +1,7 @@
 <script lang="ts">
 	/**
-	 * Buzzer Component - Elegant Christmas Design
-	 * Immer sichtbar, leuchtet auf wenn aktiv
+	 * Buzzer Component - iPhone optimiert
+	 * Großer Touch-freundlicher Button mit cozy Weihnachts-Design
 	 */
 	export let enabled: boolean = false;
 	export let buzzed: boolean = false;
@@ -11,22 +11,20 @@
 	let pressed = false;
 	
 	function handlePress() {
-		if (!enabled || buzzed) {
-			return;
-		}
+		if (!enabled || buzzed) return;
 		
 		pressed = true;
 		
-		// Haptic Feedback (falls verfügbar)
+		// Haptic Feedback
 		if (navigator.vibrate) {
-			navigator.vibrate(100);
+			navigator.vibrate(50);
 		}
 		
 		onPress();
 		
 		setTimeout(() => {
 			pressed = false;
-		}, 200);
+		}, 150);
 	}
 	
 	function handleTouchStart(event: TouchEvent) {
@@ -35,10 +33,10 @@
 	}
 </script>
 
-<div class="buzzer-wrapper">
-	<!-- Main Buzzer Button - Always Visible -->
+<div class="buzzer-container">
+	<!-- Buzzer Button -->
 	<button
-		class="buzzer-button"
+		class="buzzer"
 		class:active={enabled && !buzzed}
 		class:buzzed={buzzed}
 		class:pressed={pressed}
@@ -48,58 +46,53 @@
 		disabled={!enabled || buzzed}
 		type="button"
 	>
-		<!-- Outer Glow Ring -->
-		<div class="glow-ring"></div>
+		<!-- Glow Effect -->
+		<div class="glow"></div>
 		
-		<!-- Inner Button Face -->
-		<div class="button-face">
-			<!-- Icon -->
-			<div class="buzzer-icon">
+		<!-- Button Surface -->
+		<div class="surface">
+			<div class="icon">
 				{#if buzzed}
-					✓
+					<span class="check">✓</span>
 				{:else}
-					🔔
+					<span class="bell">🔔</span>
 				{/if}
 			</div>
 			
-			<!-- Text -->
-			<div class="buzzer-label">
+			<div class="label">
 				{#if buzzed}
-					GEBUZZT!
+					Gebuzzt!
 				{:else if enabled}
 					BUZZ!
 				{:else}
-					WARTEN
+					Warten...
 				{/if}
 			</div>
 		</div>
-
-		<!-- Decorative Ring -->
-		<div class="deco-ring"></div>
 	</button>
-
-	<!-- Status Text Below Button -->
-	<div class="status-area">
+	
+	<!-- Status Message -->
+	<div class="status">
 		{#if buzzed && position !== null}
 			<div class="position-badge">
-				<span class="position-label">Platz</span>
-				<span class="position-number">#{position}</span>
+				<span class="position-text">Platz</span>
+				<span class="position-num">#{position}</span>
 			</div>
 		{:else if buzzed}
-			<p class="status-text confirming">⏳ Wird bestätigt...</p>
+			<p class="status-msg confirming">Wird bestätigt...</p>
 		{:else if enabled}
-			<p class="status-text ready">
-				<span class="pulse-dot"></span>
-				Jetzt drücken!
+			<p class="status-msg ready">
+				<span class="dot"></span>
+				Drück jetzt!
 			</p>
 		{:else}
-			<p class="status-text waiting">🎄 Warte auf nächste Frage...</p>
+			<p class="status-msg waiting">🎄 Warte auf Frage...</p>
 		{/if}
 	</div>
 </div>
 
 <style>
-	.buzzer-wrapper {
+	.buzzer-container {
 		display: flex;
 		flex-direction: column;
 		align-items: center;
@@ -107,317 +100,282 @@
 		gap: 1.5rem;
 		padding: 1rem;
 		width: 100%;
+		height: 100%;
 	}
 
-	/* Main Button */
-	.buzzer-button {
+	/* === BUZZER BUTTON === */
+	.buzzer {
 		position: relative;
-		width: min(280px, 70vw);
-		height: min(280px, 70vw);
+		width: clamp(200px, 55vw, 260px);
+		aspect-ratio: 1;
 		border: none;
 		border-radius: 50%;
 		background: transparent;
 		cursor: pointer;
 		touch-action: manipulation;
 		-webkit-tap-highlight-color: transparent;
+		-webkit-touch-callout: none;
 		user-select: none;
-		transition: transform 0.2s ease;
+		transition: transform 0.15s ease;
 		padding: 0;
 	}
 
-	.buzzer-button:disabled {
+	.buzzer:disabled {
 		cursor: default;
 	}
 
-	.buzzer-button.active:not(.pressed):hover {
-		transform: scale(1.03);
-	}
-
-	.buzzer-button.pressed {
+	.buzzer.pressed {
 		transform: scale(0.95);
 	}
 
-	/* Outer Glow Ring */
-	.glow-ring {
+	/* === GLOW RING === */
+	.glow {
 		position: absolute;
-		inset: -8px;
+		inset: -6px;
 		border-radius: 50%;
-		background: transparent;
-		border: 3px solid rgba(100, 100, 100, 0.2);
-		transition: all 0.4s ease;
+		border: 2px solid rgba(100, 100, 100, 0.2);
+		transition: all 0.3s ease;
 	}
 
-	.buzzer-button.active .glow-ring {
-		border-color: rgba(220, 20, 60, 0.6);
+	.buzzer.active .glow {
+		border-color: rgba(220, 38, 38, 0.5);
 		box-shadow: 
-			0 0 30px rgba(220, 20, 60, 0.4),
-			0 0 60px rgba(220, 20, 60, 0.2),
-			inset 0 0 30px rgba(220, 20, 60, 0.1);
-		animation: glow-pulse 1.5s ease-in-out infinite;
+			0 0 40px rgba(220, 38, 38, 0.4),
+			0 0 80px rgba(220, 38, 38, 0.2);
+		animation: pulse-glow 1.5s ease-in-out infinite;
 	}
 
-	.buzzer-button.buzzed .glow-ring {
-		border-color: rgba(50, 205, 50, 0.6);
+	.buzzer.buzzed .glow {
+		border-color: rgba(34, 197, 94, 0.5);
 		box-shadow: 
-			0 0 30px rgba(50, 205, 50, 0.4),
-			0 0 60px rgba(50, 205, 50, 0.2);
+			0 0 40px rgba(34, 197, 94, 0.4),
+			0 0 80px rgba(34, 197, 94, 0.2);
 	}
 
-	/* Button Face */
-	.button-face {
+	@keyframes pulse-glow {
+		0%, 100% {
+			box-shadow: 
+				0 0 40px rgba(220, 38, 38, 0.4),
+				0 0 80px rgba(220, 38, 38, 0.2);
+		}
+		50% {
+			box-shadow: 
+				0 0 60px rgba(220, 38, 38, 0.6),
+				0 0 120px rgba(220, 38, 38, 0.3);
+		}
+	}
+
+	/* === SURFACE === */
+	.surface {
 		position: absolute;
-		inset: 12px;
+		inset: 8px;
 		border-radius: 50%;
 		display: flex;
 		flex-direction: column;
 		align-items: center;
 		justify-content: center;
-		gap: 0.5rem;
+		gap: 0.25rem;
 		transition: all 0.3s ease;
 		
-		/* Default inactive state */
+		/* Disabled State */
 		background: linear-gradient(145deg, 
-			rgba(60, 60, 70, 0.9) 0%,
-			rgba(40, 40, 50, 0.95) 100%
+			rgba(55, 65, 81, 0.9) 0%,
+			rgba(31, 41, 55, 0.95) 100%
 		);
-		border: 4px solid rgba(80, 80, 90, 0.5);
+		border: 3px solid rgba(75, 85, 99, 0.5);
 		box-shadow: 
-			0 8px 30px rgba(0, 0, 0, 0.4),
+			0 10px 40px rgba(0, 0, 0, 0.4),
 			inset 0 2px 0 rgba(255, 255, 255, 0.1),
 			inset 0 -4px 10px rgba(0, 0, 0, 0.3);
 	}
 
-	.buzzer-button.active .button-face {
+	.buzzer.active .surface {
 		background: linear-gradient(145deg, 
-			#dc143c 0%,
-			#b01030 50%,
-			#8b0a24 100%
+			#dc2626 0%,
+			#b91c1c 50%,
+			#991b1b 100%
 		);
-		border-color: rgba(255, 100, 100, 0.5);
+		border-color: rgba(248, 113, 113, 0.5);
 		box-shadow: 
-			0 8px 40px rgba(220, 20, 60, 0.5),
-			inset 0 2px 0 rgba(255, 255, 255, 0.2),
+			0 10px 50px rgba(220, 38, 38, 0.5),
+			inset 0 2px 0 rgba(255, 255, 255, 0.25),
 			inset 0 -4px 15px rgba(0, 0, 0, 0.3);
 	}
 
-	.buzzer-button.buzzed .button-face {
+	.buzzer.buzzed .surface {
 		background: linear-gradient(145deg, 
-			#228b22 0%,
-			#1a6b1a 50%,
-			#145214 100%
+			#16a34a 0%,
+			#15803d 50%,
+			#166534 100%
 		);
-		border-color: rgba(100, 255, 100, 0.4);
+		border-color: rgba(74, 222, 128, 0.5);
 		box-shadow: 
-			0 8px 40px rgba(34, 139, 34, 0.4),
-			inset 0 2px 0 rgba(255, 255, 255, 0.2),
+			0 10px 50px rgba(34, 197, 94, 0.4),
+			inset 0 2px 0 rgba(255, 255, 255, 0.25),
 			inset 0 -4px 15px rgba(0, 0, 0, 0.3);
 	}
 
-	.buzzer-button.pressed .button-face {
+	.buzzer.pressed .surface {
 		box-shadow: 
-			0 4px 20px rgba(220, 20, 60, 0.6),
+			0 4px 20px rgba(220, 38, 38, 0.6),
 			inset 0 4px 15px rgba(0, 0, 0, 0.4);
 	}
 
-	/* Decorative Ring */
-	.deco-ring {
-		position: absolute;
-		inset: 4px;
-		border-radius: 50%;
-		border: 2px dashed rgba(255, 255, 255, 0.1);
-		pointer-events: none;
-	}
-
-	.buzzer-button.active .deco-ring {
-		border-color: rgba(255, 215, 0, 0.3);
-		animation: spin-slow 20s linear infinite;
-	}
-
-	/* Icon */
-	.buzzer-icon {
-		font-size: clamp(3rem, 12vw, 5rem);
+	/* === ICON === */
+	.icon {
+		font-size: clamp(3rem, 12vw, 4.5rem);
 		line-height: 1;
 		transition: all 0.3s ease;
-		filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
 	}
 
-	.buzzer-button.disabled .buzzer-icon {
+	.buzzer.disabled .icon {
 		opacity: 0.4;
 		filter: grayscale(0.5);
 	}
 
-	.buzzer-button.active .buzzer-icon {
-		animation: wiggle 0.5s ease-in-out infinite;
+	.buzzer.active .icon {
+		animation: shake 0.4s ease-in-out infinite;
 	}
 
-	.buzzer-button.buzzed .buzzer-icon {
-		color: #fff;
-		font-size: clamp(3.5rem, 14vw, 6rem);
+	.check {
+		color: white;
+		font-weight: bold;
 		text-shadow: 0 0 20px rgba(255, 255, 255, 0.5);
 	}
 
-	/* Label */
-	.buzzer-label {
-		font-family: 'Georgia', serif;
-		font-size: clamp(1rem, 4vw, 1.5rem);
-		font-weight: bold;
-		letter-spacing: 0.15em;
-		text-transform: uppercase;
-		transition: all 0.3s ease;
-		color: rgba(255, 255, 255, 0.4);
+	@keyframes shake {
+		0%, 100% { transform: rotate(0deg); }
+		25% { transform: rotate(-8deg); }
+		75% { transform: rotate(8deg); }
 	}
 
-	.buzzer-button.active .buzzer-label {
-		color: #fff;
+	/* === LABEL === */
+	.label {
+		font-size: clamp(0.875rem, 3.5vw, 1.125rem);
+		font-weight: 700;
+		letter-spacing: 0.1em;
+		text-transform: uppercase;
+		color: rgba(255, 255, 255, 0.4);
+		transition: all 0.3s ease;
+	}
+
+	.buzzer.active .label {
+		color: white;
 		text-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
 	}
 
-	.buzzer-button.buzzed .buzzer-label {
-		color: #90EE90;
-		text-shadow: 0 0 10px rgba(144, 238, 144, 0.5);
+	.buzzer.buzzed .label {
+		color: #bbf7d0;
+		text-shadow: 0 0 10px rgba(187, 247, 208, 0.5);
 	}
 
-	/* Status Area */
-	.status-area {
-		min-height: 60px;
+	/* === STATUS === */
+	.status {
+		min-height: 50px;
 		display: flex;
 		align-items: center;
 		justify-content: center;
 	}
 
-	.status-text {
-		font-size: 1rem;
+	.status-msg {
+		font-size: 0.9375rem;
 		margin: 0;
 		display: flex;
 		align-items: center;
 		gap: 0.5rem;
 	}
 
-	.status-text.waiting {
-		color: rgba(255, 248, 220, 0.5);
+	.status-msg.waiting {
+		color: rgba(255, 255, 255, 0.4);
 	}
 
-	.status-text.ready {
-		color: #ffd700;
-		font-weight: bold;
+	.status-msg.ready {
+		color: #fbbf24;
+		font-weight: 600;
 		animation: fade-pulse 1s ease-in-out infinite;
 	}
 
-	.status-text.confirming {
-		color: rgba(255, 248, 220, 0.7);
-	}
-
-	.pulse-dot {
-		width: 10px;
-		height: 10px;
-		background: #dc143c;
-		border-radius: 50%;
-		animation: pulse-dot 1s ease-in-out infinite;
-	}
-
-	/* Position Badge */
-	.position-badge {
-		display: flex;
-		flex-direction: column;
-		align-items: center;
-		padding: 0.75rem 2rem;
-		background: linear-gradient(135deg, rgba(50, 205, 50, 0.2), rgba(34, 139, 34, 0.1));
-		border: 2px solid rgba(50, 205, 50, 0.5);
-		border-radius: 16px;
-		animation: pop-in 0.3s ease-out;
-	}
-
-	.position-label {
-		font-size: 0.8rem;
-		color: rgba(255, 248, 220, 0.7);
-		text-transform: uppercase;
-		letter-spacing: 0.1em;
-	}
-
-	.position-number {
-		font-family: 'Georgia', serif;
-		font-size: 2rem;
-		font-weight: bold;
-		color: #90EE90;
-		text-shadow: 0 0 10px rgba(144, 238, 144, 0.5);
-	}
-
-	/* Animations */
-	@keyframes glow-pulse {
-		0%, 100% {
-			box-shadow: 
-				0 0 30px rgba(220, 20, 60, 0.4),
-				0 0 60px rgba(220, 20, 60, 0.2),
-				inset 0 0 30px rgba(220, 20, 60, 0.1);
-		}
-		50% {
-			box-shadow: 
-				0 0 50px rgba(220, 20, 60, 0.6),
-				0 0 100px rgba(220, 20, 60, 0.3),
-				inset 0 0 40px rgba(220, 20, 60, 0.15);
-		}
-	}
-
-	@keyframes wiggle {
-		0%, 100% { transform: rotate(0deg); }
-		25% { transform: rotate(-5deg); }
-		75% { transform: rotate(5deg); }
-	}
-
-	@keyframes spin-slow {
-		from { transform: rotate(0deg); }
-		to { transform: rotate(360deg); }
-	}
-
-	@keyframes pulse-dot {
-		0%, 100% { 
-			transform: scale(1);
-			opacity: 1;
-		}
-		50% { 
-			transform: scale(1.3);
-			opacity: 0.7;
-		}
+	.status-msg.confirming {
+		color: rgba(255, 255, 255, 0.6);
 	}
 
 	@keyframes fade-pulse {
 		0%, 100% { opacity: 1; }
-		50% { opacity: 0.7; }
+		50% { opacity: 0.6; }
+	}
+
+	.dot {
+		width: 8px;
+		height: 8px;
+		background: #dc2626;
+		border-radius: 50%;
+		animation: dot-pulse 1s ease-in-out infinite;
+	}
+
+	@keyframes dot-pulse {
+		0%, 100% { transform: scale(1); opacity: 1; }
+		50% { transform: scale(1.4); opacity: 0.6; }
+	}
+
+	/* === POSITION BADGE === */
+	.position-badge {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		padding: 0.625rem 1.5rem;
+		background: linear-gradient(135deg, 
+			rgba(34, 197, 94, 0.2) 0%,
+			rgba(22, 163, 74, 0.1) 100%
+		);
+		border: 1px solid rgba(34, 197, 94, 0.4);
+		border-radius: 14px;
+		animation: pop-in 0.25s ease-out;
 	}
 
 	@keyframes pop-in {
-		from {
-			transform: scale(0.8);
-			opacity: 0;
+		from { transform: scale(0.8); opacity: 0; }
+		to { transform: scale(1); opacity: 1; }
+	}
+
+	.position-text {
+		font-size: 0.7rem;
+		color: rgba(255, 255, 255, 0.6);
+		text-transform: uppercase;
+		letter-spacing: 0.08em;
+	}
+
+	.position-num {
+		font-size: 1.75rem;
+		font-weight: 700;
+		color: #86efac;
+		text-shadow: 0 0 15px rgba(134, 239, 172, 0.5);
+	}
+
+	/* === KLEINE BILDSCHIRME === */
+	@media (max-height: 667px) {
+		.buzzer-container {
+			gap: 1rem;
+			padding: 0.5rem;
 		}
-		to {
-			transform: scale(1);
-			opacity: 1;
+
+		.buzzer {
+			width: clamp(160px, 45vw, 200px);
+		}
+
+		.status {
+			min-height: 40px;
 		}
 	}
 
-	/* Mobile */
-	@media (max-width: 400px) {
-		.buzzer-button {
-			width: min(240px, 65vw);
-			height: min(240px, 65vw);
-		}
-	}
-
-	/* Landscape */
+	/* === LANDSCAPE === */
 	@media (orientation: landscape) and (max-height: 500px) {
-		.buzzer-wrapper {
+		.buzzer-container {
 			flex-direction: row;
-			gap: 2rem;
+			gap: 1.5rem;
 		}
 
-		.buzzer-button {
-			width: min(200px, 40vh);
-			height: min(200px, 40vh);
-		}
-
-		.status-area {
-			min-height: auto;
+		.buzzer {
+			width: clamp(150px, 35vh, 180px);
 		}
 	}
 </style>

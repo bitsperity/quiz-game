@@ -6,13 +6,15 @@ export default defineConfig({
 	plugins: [sveltekit(), websocketPlugin()],
 	server: {
 		port: 54321,
-		host: true,
+		host: '0.0.0.0',
 		watch: {
 			usePolling: true, // Wichtig für Docker Hot Reload
-			interval: 1000
+			interval: 300
 		},
 		hmr: {
-			clientPort: 54321
+			port: 24678, // Separater Port für HMR um Konflikt mit Game-WebSocket zu vermeiden
+			clientPort: 24678,
+			host: 'localhost'
 		}
 	},
 	ssr: {

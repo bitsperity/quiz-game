@@ -16,7 +16,7 @@ import db from '../db';
 
 // Internal state uses Map for efficient lookups
 interface InternalGameState {
-	currentView: 'matrix' | 'question-hidden' | 'question-reveal';
+	currentView: 'matrix' | 'question-selected' | 'question-hidden' | 'question-reveal';
 	selectedQuestion: Question | null;
 	players: Map<string, Player>;
 	buzzerQueue: BuzzerEntry[];
@@ -132,10 +132,11 @@ class GameStateService implements IGameStateService {
 					cell.state = 'selected';
 
 					this.state.selectedQuestion = cell.question;
-					this.state.currentView = 'question-hidden';
+					// Erst nur "selected" - Frage wird noch nicht gezeigt
+					this.state.currentView = 'question-selected';
 					this.state.gamePhase = 'question';
 					this.state.buzzerQueue = [];
-					this.state.questionStartTime = Date.now();
+					// questionStartTime wird erst bei reveal gesetzt
 					this.saveState();
 					return cell.question;
 				}
@@ -143,6 +144,20 @@ class GameStateService implements IGameStateService {
 		}
 
 		return null;
+	}
+
+	/**
+	 * Revealed die ausgewählte Frage - aktiviert Buzzer und zeigt Frage in Game-View
+	 */
+	revealQuestion(): boolean {
+		if (!this.state.selectedQuestion || this.state.currentView !== 'question-selected') {
+			return false;
+		}
+		
+		this.state.currentView = 'question-hidden';
+		this.state.questionStartTime = Date.now();
+		this.saveState();
+		return true;
 	}
 
 
@@ -365,13 +380,18 @@ class GameStateService implements IGameStateService {
 	}
 }
 
-// Singleton Instance
-let gameStateServiceInstance: GameStateService | null = null;
+// Singleton Instance - Verwende globalThis für HMR-Kompatibilität
+// Dies verhindert, dass bei Hot Module Reloading mehrere Instanzen entstehen
+declare global {
+	// eslint-disable-next-line no-var
+	var __gameStateServiceInstance: GameStateService | undefined;
+}
 
 export function getGameStateService(): GameStateService {
-	if (!gameStateServiceInstance) {
-		gameStateServiceInstance = new GameStateService();
+	if (!globalThis.__gameStateServiceInstance) {
+		console.log('[GameStateService] Erstelle neue Singleton-Instanz');
+		globalThis.__gameStateServiceInstance = new GameStateService();
 	}
-	return gameStateServiceInstance;
+	return globalThis.__gameStateServiceInstance;
 }
 

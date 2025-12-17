@@ -258,7 +258,7 @@
 				gameState.update((state) => ({
 					...state,
 					selectedQuestion: data.question,
-					currentView: 'question-hidden',
+					currentView: 'question-selected', // Erst "selected", nicht "hidden"!
 					gamePhase: 'question'
 				}));
 
@@ -309,6 +309,19 @@
 		} catch (error) {
 			console.error('[Admin] Fehler beim Zurückkehren zur Matrix:', error);
 		}
+	}
+
+	function handleRevealQuestion() {
+		// WebSocket Event senden um Frage aufzudecken
+		adminWebSocket.send({
+			type: 'admin:reveal-question'
+		});
+		
+		// Lokalen State aktualisieren
+		gameState.update((state) => ({
+			...state,
+			currentView: 'question-hidden'
+		}));
 	}
 
 	async function handleScoreUpdate(playerId: string, delta: number) {
@@ -483,14 +496,23 @@
 
 <div class="admin-panel">
 	<header class="admin-header">
-		<h1>🎄 ADMIN CONTROL PANEL 🎄</h1>
-		<div class="header-buttons">
-			<button class="btn-sync" on:click={handleSyncMatrix} title="Matrix aus DB neu laden">
-				🔄 SYNC MATRIX
+		<div class="header-brand">
+			<i class="fas fa-gamepad header-icon"></i>
+			<h1>Game Control</h1>
+		</div>
+		<div class="header-actions">
+			<button class="btn-action btn-sync" on:click={handleSyncMatrix} title="Matrix aus DB neu laden">
+				<i class="fas fa-sync-alt"></i>
+				<span>Sync</span>
 			</button>
-			<button class="btn-reset" on:click={handleResetGame} title="Spiel komplett zurücksetzen">
-				🗑️ RESET GAME
+			<button class="btn-action btn-reset" on:click={handleResetGame} title="Spiel komplett zurücksetzen">
+				<i class="fas fa-redo-alt"></i>
+				<span>Reset</span>
 			</button>
+			<a href="/admin/questions?token={token}" class="btn-action btn-questions" title="Fragen verwalten">
+				<i class="fas fa-list-ul"></i>
+				<span>Fragen</span>
+			</a>
 		</div>
 	</header>
 
@@ -500,11 +522,13 @@
 		</div>
 
 		<div class="right-column">
-			<PlayerDashboard onScoreUpdate={handleScoreUpdate} onDeletePlayer={handleDeletePlayer} />
-			<BuzzerQueue onSelectPlayer={handleSelectPlayer} />
-			<QuestionControl
-				onReturnToMatrix={handleReturnToMatrix}
-			/>
+			<div class="right-top-row">
+				<PlayerDashboard onScoreUpdate={handleScoreUpdate} onDeletePlayer={handleDeletePlayer} />
+				<BuzzerQueue onSelectPlayer={handleSelectPlayer} />
+			</div>
+			<div class="right-bottom-row">
+				<QuestionControl onReturnToMatrix={handleReturnToMatrix} onRevealQuestion={handleRevealQuestion} />
+			</div>
 		</div>
 	</div>
 </div>
@@ -513,132 +537,225 @@
 	:global(body) {
 		margin: 0;
 		padding: 0;
-		background: #0f1419;
-		color: #fff8dc;
-		font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu,
-			Cantarell, sans-serif;
+		background: #0a0e12;
+		color: #f5f0e1;
+		font-family: 'Lato', -apple-system, BlinkMacSystemFont, sans-serif;
+		overflow: hidden;
 	}
 
 	.admin-panel {
-		min-height: 100vh;
-		padding: 1rem;
-		background: linear-gradient(135deg, rgba(15, 20, 25, 0.95) 0%, rgba(34, 139, 34, 0.1) 100%);
-		border: 2px solid rgba(255, 215, 0, 0.3);
-		box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+		height: 100%;
+		display: flex;
+		flex-direction: column;
+		background: 
+			radial-gradient(ellipse at 20% 20%, rgba(139, 69, 19, 0.08) 0%, transparent 50%),
+			radial-gradient(ellipse at 80% 80%, rgba(34, 139, 34, 0.06) 0%, transparent 50%),
+			linear-gradient(180deg, #0a0e12 0%, #0f1419 100%);
+		overflow: hidden;
+		box-sizing: border-box;
 	}
 
 	.admin-header {
-		text-align: center;
-		padding: 1rem;
-		margin-bottom: 1rem;
-		border-bottom: 2px solid rgba(255, 215, 0, 0.3);
+		flex-shrink: 0;
+		height: 52px;
+		padding: 0 1rem;
+		background: linear-gradient(180deg, rgba(20, 25, 30, 0.95) 0%, rgba(15, 20, 25, 0.9) 100%);
+		border-bottom: 1px solid rgba(212, 175, 55, 0.2);
 		display: flex;
 		justify-content: space-between;
 		align-items: center;
-		flex-wrap: wrap;
 		gap: 1rem;
+		box-sizing: border-box;
+	}
+
+	.header-brand {
+		display: flex;
+		align-items: center;
+		gap: 0.6rem;
+	}
+
+	.header-icon {
+		color: rgba(212, 175, 55, 0.8);
+		font-size: 0.9rem;
 	}
 
 	.admin-header h1 {
 		margin: 0;
-		font-size: clamp(1.5rem, 4vw, 2.5rem);
-		color: #ffd700;
-		text-shadow: 0 2px 8px rgba(255, 215, 0, 0.5);
-		flex: 1;
+		font-family: 'Cinzel', serif;
+		font-size: 0.9rem;
+		font-weight: 600;
+		color: #d4af37;
+		letter-spacing: 0.08em;
 	}
 
-	.header-buttons {
+	.header-actions {
 		display: flex;
-		gap: 0.75rem;
-		flex-wrap: wrap;
+		gap: 0.5rem;
+		flex-shrink: 0;
+	}
+
+	.btn-action {
+		display: flex;
+		align-items: center;
+		gap: 0.5rem;
+		padding: 0.5rem 1rem;
+		border: 1px solid transparent;
+		border-radius: 6px;
+		font-family: 'Lato', sans-serif;
+		font-weight: 600;
+		font-size: 0.8rem;
+		letter-spacing: 0.03em;
+		cursor: pointer;
+		transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+		min-height: 36px;
+		touch-action: manipulation;
+		-webkit-tap-highlight-color: transparent;
+		box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+	}
+
+	.btn-action i {
+		font-size: 0.85rem;
+		transition: transform 0.3s ease;
 	}
 
 	.btn-sync {
-		background: linear-gradient(135deg, #228b22, #32cd32);
-		color: white;
-		border: 2px solid #228b22;
-		padding: 0.75rem 1.5rem;
-		border-radius: 8px;
-		font-weight: bold;
-		font-size: 1rem;
-		cursor: pointer;
-		transition: all 0.2s ease;
-		min-height: 44px;
-		touch-action: manipulation;
-		box-shadow: 0 2px 8px rgba(34, 139, 34, 0.3);
+		background: linear-gradient(135deg, #1a472a 0%, #2d5a3d 100%);
+		color: #a8d5a2;
+		border-color: rgba(45, 90, 61, 0.5);
 	}
 
 	.btn-sync:hover {
-		background: linear-gradient(135deg, #32cd32, #228b22);
-		transform: scale(1.05);
-		box-shadow: 0 4px 12px rgba(34, 139, 34, 0.5);
+		background: linear-gradient(135deg, #2d5a3d 0%, #3d7a50 100%);
+		border-color: rgba(61, 122, 80, 0.7);
+		transform: translateY(-1px);
+		box-shadow: 0 4px 12px rgba(45, 90, 61, 0.4);
+	}
+
+	.btn-sync:hover i {
+		transform: rotate(180deg);
 	}
 
 	.btn-sync:active {
-		transform: scale(0.95);
+		transform: translateY(0);
+		box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
 	}
 
 	.btn-reset {
-		background: linear-gradient(135deg, #dc143c, #ff6347);
-		color: white;
-		border: 2px solid #dc143c;
-		padding: 0.75rem 1.5rem;
-		border-radius: 8px;
-		font-weight: bold;
-		font-size: 1rem;
-		cursor: pointer;
-		transition: all 0.2s ease;
-		min-height: 44px;
-		touch-action: manipulation;
-		box-shadow: 0 2px 8px rgba(220, 20, 60, 0.3);
+		background: linear-gradient(135deg, #4a1a1a 0%, #6b2d2d 100%);
+		color: #e8a0a0;
+		border-color: rgba(107, 45, 45, 0.5);
 	}
 
 	.btn-reset:hover {
-		background: linear-gradient(135deg, #ff6347, #dc143c);
-		transform: scale(1.05);
-		box-shadow: 0 4px 12px rgba(220, 20, 60, 0.5);
+		background: linear-gradient(135deg, #6b2d2d 0%, #8b3d3d 100%);
+		border-color: rgba(139, 61, 61, 0.7);
+		transform: translateY(-1px);
+		box-shadow: 0 4px 12px rgba(107, 45, 45, 0.4);
+	}
+
+	.btn-reset:hover i {
+		transform: rotate(-180deg);
 	}
 
 	.btn-reset:active {
-		transform: scale(0.95);
+		transform: translateY(0);
+		box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+	}
+
+	.btn-questions {
+		background: linear-gradient(135deg, #2a2a4a 0%, #3d3d6b 100%);
+		color: #a0a0e8;
+		border-color: rgba(61, 61, 107, 0.5);
+		text-decoration: none;
+	}
+
+	.btn-questions:hover {
+		background: linear-gradient(135deg, #3d3d6b 0%, #5050a0 100%);
+		border-color: rgba(80, 80, 160, 0.7);
+		transform: translateY(-1px);
+		box-shadow: 0 4px 12px rgba(61, 61, 107, 0.4);
+	}
+
+	.btn-questions:active {
+		transform: translateY(0);
+		box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
 	}
 
 	.admin-content {
+		flex: 1;
 		display: grid;
-		grid-template-columns: 40% 60%;
-		gap: 1.5rem;
-		max-width: 1400px;
-		margin: 0 auto;
+		grid-template-columns: 45% 55%;
+		gap: 0.5rem;
+		padding: 0.5rem;
+		min-height: 0;
+		box-sizing: border-box;
 	}
 
 	.left-column {
 		display: flex;
 		flex-direction: column;
+		min-height: 0;
+		overflow: hidden;
 	}
 
 	.right-column {
-		display: flex;
-		flex-direction: column;
-		gap: 1rem;
+		display: grid;
+		grid-template-rows: 40% 60%;
+		gap: 0.5rem;
+		min-height: 0;
+		overflow: hidden;
 	}
 
-	/* iPad Portrait Optimierung */
-	@media (max-width: 768px) {
+	.right-top-row {
+		display: grid;
+		grid-template-columns: 1fr 1fr;
+		gap: 0.5rem;
+		min-height: 0;
+		overflow: hidden;
+	}
+
+	.right-bottom-row {
+		min-height: 0;
+		overflow: hidden;
+	}
+
+	/* iPad Portrait Fallback */
+	@media (orientation: portrait) and (max-width: 900px) {
 		.admin-content {
 			grid-template-columns: 1fr;
+			grid-template-rows: auto 1fr;
 		}
 
-		.left-column,
+		.left-column {
+			max-height: 40vh;
+		}
+
 		.right-column {
-			width: 100%;
+			grid-template-rows: auto auto;
+		}
+
+		.right-top-row {
+			grid-template-columns: 1fr;
+		}
+	}
+
+	/* Kleinere Tablets / Phones */
+	@media (max-width: 600px) {
+		.admin-header h1 {
+			font-size: 0.9rem;
+		}
+
+		.btn-sync, .btn-reset {
+			font-size: 0.75rem;
+			padding: 0.3rem 0.5rem;
 		}
 	}
 
 	/* Touch-optimierte Buttons */
 	:global(.admin-button) {
 		min-height: 44px;
-		padding: 0.75rem 1.5rem;
-		font-size: 1.1rem;
+		padding: 0.5rem 1rem;
+		font-size: 1rem;
 		border-radius: 8px;
 		touch-action: manipulation;
 		-webkit-tap-highlight-color: transparent;

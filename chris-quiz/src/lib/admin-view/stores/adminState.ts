@@ -10,7 +10,7 @@ import type { Player, Question, MatrixCell, BuzzerEntry } from '$lib/shared';
 export const selectedCell = writable<{ category: number; points: number } | null>(null);
 export const activePlayerId = writable<string | null>(null);
 export const gameState = writable<{
-	currentView: 'matrix' | 'question-hidden' | 'question-reveal';
+	currentView: 'matrix' | 'question-selected' | 'question-hidden' | 'question-reveal';
 	selectedQuestion: Question | null;
 	players: Player[];
 	buzzerQueue: BuzzerEntry[];

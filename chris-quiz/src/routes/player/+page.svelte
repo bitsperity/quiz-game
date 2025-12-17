@@ -84,17 +84,45 @@
 		}
 	}
 
+	// Grace Period in ms - nach einem WebSocket-Update wird das Polling für Buzzer-Status ignoriert
+	const WEBSOCKET_GRACE_PERIOD = 1500;
+
 	async function loadGameState() {
 		try {
 			const response = await fetch('/api/game/state');
 			if (response.ok) {
 				const data = await response.json();
 				const players: Player[] = Array.isArray(data.players) ? data.players : [];
+				
+				// WICHTIG: Prüfe ob der eingeloggte Spieler noch existiert
+				// Nach Game-Reset existiert der Spieler nicht mehr auf dem Server
+				if (playerId) {
+					const playerExists = players.some(p => p.id === playerId);
+					if (!playerExists) {
+						console.log('[Player View] Spieler existiert nicht mehr auf Server - Logout');
+						// Automatischer Logout wenn Spieler nicht mehr existiert
+						playerWebSocket.disconnect();
+						logout();
+						return;
+					}
+				}
+				
 				updatePlayers(players);
 				setCurrentQuestion(data.selectedQuestion || null);
-				setBuzzerEnabled(data.currentView === 'question-hidden');
 				
-				// Setze Buzzer-Position
+				// WICHTIG: Prüfe ob kürzlich ein WebSocket-Update kam
+				// Wenn ja, überschreibe Buzzer-Status NICHT - WebSocket hat Priorität!
+				const currentState = $playerState;
+				const timeSinceLastWsUpdate = Date.now() - currentState.lastWebSocketUpdate;
+				const isWithinGracePeriod = timeSinceLastWsUpdate < WEBSOCKET_GRACE_PERIOD;
+				
+				if (!isWithinGracePeriod) {
+					// Außerhalb der Grace Period: Buzzer-Status von Server übernehmen
+					setBuzzerEnabled(data.currentView === 'question-hidden', false);
+				}
+				// Innerhalb der Grace Period: Buzzer-Status NICHT überschreiben!
+				
+				// Setze Buzzer-Position (das kann immer aktualisiert werden)
 				if (playerId && Array.isArray(data.buzzerQueue)) {
 					const buzzerIndex = data.buzzerQueue.findIndex(
 						(entry: { playerId: string }) => entry.playerId === playerId
@@ -140,25 +168,29 @@
 	{#if currentView === 'login'}
 		<Login onSubmit={handleLogin} />
 	{:else if currentView === 'game'}
-		<div class="game-container">
-			<header class="header">
-				<h1 class="title">🎄 WEIHNACHTS-QUIZ 🎄</h1>
-				<div class="header-info">
-					{#if playerId && playerName}
-						<p class="player-name">Spieler: {playerName}</p>
-					{/if}
-					<button class="logout-button" on:click={handleLogout} type="button">
-						🚪 Abmelden
-					</button>
+		<div class="game-screen">
+			<!-- Schneeflocken Hintergrund -->
+			<div class="snowflakes" aria-hidden="true">
+				{#each Array(10) as _, i}
+					<div class="snowflake" style="--i: {i}">❄</div>
+				{/each}
+			</div>
+			
+			<!-- Header -->
+			<header class="game-header">
+				<div class="player-info">
+					<span class="player-icon">🎅</span>
+					<span class="player-name">{playerName}</span>
 				</div>
+				<button class="logout-btn" on:click={handleLogout} type="button" aria-label="Abmelden">
+					<span class="logout-icon">✕</span>
+				</button>
 			</header>
-
-			<main class="main-content">
-				<div class="scoreboard-section">
-					<Scoreboard {players} currentPlayerId={playerId} />
-				</div>
-
-				<div class="buzzer-section">
+			
+			<!-- Main Content -->
+			<main class="game-content">
+				<!-- Buzzer - Hauptbereich -->
+				<div class="buzzer-area">
 					<Buzzer
 						enabled={buzzerEnabled}
 						buzzed={buzzed}
@@ -166,130 +198,178 @@
 						onPress={handleBuzzerPress}
 					/>
 				</div>
+				
+				<!-- Scoreboard - Unten -->
+				<div class="scoreboard-area">
+					<Scoreboard {players} currentPlayerId={playerId} />
+				</div>
 			</main>
 		</div>
 	{/if}
 </div>
 
 <style>
+	/* === BASE === */
 	.player-view {
-		min-height: 100vh;
-		width: 100%;
-		background: linear-gradient(135deg, #0f1419 0%, #1a2332 100%);
+		position: fixed;
+		inset: 0;
+		font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', Roboto, sans-serif;
 	}
 
-	.game-container {
+	/* === GAME SCREEN === */
+	.game-screen {
+		position: absolute;
+		inset: 0;
 		display: flex;
 		flex-direction: column;
-		min-height: 100vh;
-		padding: 1rem;
+		background: linear-gradient(180deg, 
+			#0d1b2a 0%, 
+			#1b263b 40%, 
+			#2d3a4f 100%
+		);
+		overflow: hidden;
 	}
 
-	.header {
-		text-align: center;
-		padding: 1rem;
-		margin-bottom: 1rem;
+	/* === SCHNEEFLOCKEN === */
+	.snowflakes {
+		position: absolute;
+		inset: 0;
+		pointer-events: none;
+		overflow: hidden;
+		z-index: 0;
 	}
 
-	.title {
-		color: #ffd700;
-		font-size: 1.5rem;
-		margin: 0 0 0.5rem 0;
-		text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+	.snowflake {
+		position: absolute;
+		top: -20px;
+		font-size: 0.875rem;
+		color: rgba(255, 255, 255, 0.4);
+		animation: fall linear infinite;
+		animation-duration: calc(10s + var(--i) * 3s);
+		animation-delay: calc(var(--i) * -2s);
+		left: calc(var(--i) * 10%);
+		opacity: calc(0.2 + var(--i) * 0.04);
 	}
 
-	.header-info {
+	@keyframes fall {
+		0% { transform: translateY(-20px) rotate(0deg); }
+		100% { transform: translateY(100vh) rotate(360deg); }
+	}
+
+	/* === HEADER === */
+	.game-header {
+		position: relative;
+		z-index: 10;
 		display: flex;
-		justify-content: space-between;
 		align-items: center;
-		gap: 1rem;
-		flex-wrap: wrap;
+		justify-content: space-between;
+		padding: 0.75rem 1rem;
+		padding-top: max(0.75rem, env(safe-area-inset-top));
+		background: rgba(0, 0, 0, 0.3);
+		backdrop-filter: blur(10px);
+		-webkit-backdrop-filter: blur(10px);
+		border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+	}
+
+	.player-info {
+		display: flex;
+		align-items: center;
+		gap: 0.625rem;
+	}
+
+	.player-icon {
+		font-size: 1.5rem;
 	}
 
 	.player-name {
-		color: #fff8dc;
-		font-size: 0.9rem;
-		margin: 0;
-		opacity: 0.8;
-		flex: 1;
+		color: #fbbf24;
+		font-size: 1rem;
+		font-weight: 600;
+		letter-spacing: -0.01em;
 	}
 
-	.logout-button {
-		padding: 0.5rem 1rem;
-		background: rgba(220, 20, 60, 0.3);
-		border: 2px solid #dc143c;
-		border-radius: 8px;
-		color: #fff8dc;
-		font-size: 0.85rem;
+	.logout-btn {
+		width: 36px;
+		height: 36px;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		background: rgba(239, 68, 68, 0.2);
+		border: 1px solid rgba(239, 68, 68, 0.4);
+		border-radius: 10px;
+		color: #fca5a5;
+		font-size: 1rem;
 		cursor: pointer;
-		transition: all 0.2s ease;
 		touch-action: manipulation;
-		min-height: 36px;
+		-webkit-tap-highlight-color: transparent;
+		transition: all 0.2s ease;
 	}
 
-	.logout-button:hover {
-		background: rgba(220, 20, 60, 0.5);
-		transform: scale(1.05);
-	}
-
-	.logout-button:active {
+	.logout-btn:active {
 		transform: scale(0.95);
+		background: rgba(239, 68, 68, 0.3);
 	}
 
-	.main-content {
+	.logout-icon {
+		font-weight: bold;
+	}
+
+	/* === MAIN CONTENT === */
+	.game-content {
+		position: relative;
+		z-index: 1;
 		flex: 1;
 		display: flex;
 		flex-direction: column;
+		padding: 1rem;
+		padding-bottom: max(1rem, env(safe-area-inset-bottom));
 		gap: 1rem;
+		min-height: 0;
 	}
 
-	.scoreboard-section {
-		flex: 0 0 auto;
-	}
-
-	.buzzer-section {
+	/* === BUZZER AREA === */
+	.buzzer-area {
 		flex: 1;
 		display: flex;
 		align-items: center;
 		justify-content: center;
-		min-height: 200px;
+		min-height: 0;
 	}
 
-	/* Mobile Optimierungen */
-	@media (max-width: 480px) {
-		.game-container {
+	/* === SCOREBOARD AREA === */
+	.scoreboard-area {
+		flex-shrink: 0;
+		max-height: 200px;
+		overflow: hidden;
+	}
+
+	/* === KLEINE BILDSCHIRME (iPhone SE) === */
+	@media (max-height: 667px) {
+		.game-content {
 			padding: 0.75rem;
+			gap: 0.75rem;
 		}
 
-		.title {
-			font-size: 1.25rem;
-		}
-
-		.player-name {
-			font-size: 0.85rem;
+		.scoreboard-area {
+			max-height: 160px;
 		}
 	}
 
-	/* Landscape Mode */
+	/* === LANDSCAPE MODE === */
 	@media (orientation: landscape) and (max-height: 500px) {
-		.main-content {
+		.game-content {
 			flex-direction: row;
+			padding: 0.5rem 1rem;
 		}
 
-		.scoreboard-section {
-			flex: 0 0 40%;
+		.buzzer-area {
+			flex: 0 0 55%;
 		}
 
-		.buzzer-section {
-			flex: 0 0 60%;
-		}
-	}
-
-	/* Tablet und größer */
-	@media (min-width: 768px) {
-		.game-container {
-			max-width: 600px;
-			margin: 0 auto;
+		.scoreboard-area {
+			flex: 0 0 45%;
+			max-height: none;
+			overflow-y: auto;
 		}
 	}
 </style>
