@@ -40,9 +40,22 @@ class WebSocketServerManager {
 		WebSocketServer = WSS;
 		WebSocket = WS;
 
+		// noServer: true verhindert, dass der WS-Server automatisch alle Upgrade-Requests übernimmt
 		this.wss = new WebSocketServer({
-			server,
-			path: '/ws'
+			noServer: true
+		});
+
+		// Handle nur WebSocket-Upgrade-Requests auf /ws Pfad
+		server.on('upgrade', (request: IncomingMessage, socket: any, head: Buffer) => {
+			const pathname = new URL(request.url || '', `http://${request.headers.host}`).pathname;
+			
+			// Nur /ws Pfad für Game-WebSocket - alle anderen (inkl. Vite HMR) ignorieren
+			if (pathname === '/ws') {
+				this.wss.handleUpgrade(request, socket, head, (ws: any) => {
+					this.wss.emit('connection', ws, request);
+				});
+			}
+			// Für alle anderen Pfade: NICHTS tun - lässt Vite seine eigenen WS-Verbindungen handhaben
 		});
 
 		this.wss.on('connection', (ws: any, req: IncomingMessage) => {

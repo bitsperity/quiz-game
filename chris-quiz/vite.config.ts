@@ -11,12 +11,7 @@ export default defineConfig({
 			usePolling: true, // Wichtig für Docker Hot Reload
 			interval: 300
 		},
-		hmr: {
-			// HMR läuft über den Hauptserver-Port (funktioniert zuverlässiger in Docker)
-			protocol: 'ws',
-			host: 'localhost',
-			clientPort: 54321
-		}
+		hmr: false // HMR in Docker deaktiviert - manueller Reload erforderlich
 	},
 	ssr: {
 		// Server-only Module, die nicht gebundelt werden sollen
