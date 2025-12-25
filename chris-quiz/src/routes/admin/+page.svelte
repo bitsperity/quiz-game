@@ -359,6 +359,40 @@
 		}
 	}
 
+	async function handleScoreSet(playerId: string, absoluteScore: number) {
+		const currentToken = token || $page.url.searchParams.get('token');
+		if (!currentToken) {
+			alert('Kein Admin-Token gefunden. Bitte Seite neu laden mit ?token=SECRET_TOKEN');
+			return;
+		}
+		
+		try {
+			const response = await fetch(`/api/players/${playerId}/score`, {
+				method: 'POST',
+				headers: {
+					'Content-Type': 'application/json',
+					'X-Admin-Token': currentToken
+				},
+				body: JSON.stringify({ absoluteScore })
+			});
+
+			if (response.ok) {
+				const data = await response.json();
+				if (data.success) {
+					// Update local state - der Broadcast wird bereits von der API-Route gemacht
+					gameState.update((state) => ({
+						...state,
+						players: state.players.map((p) =>
+							p.id === playerId ? { ...p, score: data.newScore } : p
+						)
+					}));
+				}
+			}
+		} catch (error) {
+			console.error('[Admin] Fehler beim Setzen des Scores:', error);
+		}
+	}
+
 	function handleSelectPlayer(playerId: string) {
 		activePlayerId.set(playerId);
 	}
@@ -523,7 +557,7 @@
 
 		<div class="right-column">
 			<div class="right-top-row">
-				<PlayerDashboard onScoreUpdate={handleScoreUpdate} onDeletePlayer={handleDeletePlayer} />
+				<PlayerDashboard onScoreUpdate={handleScoreUpdate} onScoreSet={handleScoreSet} onDeletePlayer={handleDeletePlayer} />
 				<BuzzerQueue onSelectPlayer={handleSelectPlayer} />
 			</div>
 			<div class="right-bottom-row">

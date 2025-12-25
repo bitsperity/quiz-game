@@ -203,6 +203,15 @@ class GameStateService implements IGameStateService {
 		}
 	}
 
+	setScore(playerId: string, absoluteScore: number): void {
+		const player = this.state.players.get(playerId);
+		if (player) {
+			player.score = Math.max(0, absoluteScore);
+			this.state.players.set(playerId, player);
+			this.saveState();
+		}
+	}
+
 	registerBuzzer(playerId: string, playerName: string, timestamp: number): BuzzerEntry {
 		const player = this.state.players.get(playerId);
 		if (!player) {

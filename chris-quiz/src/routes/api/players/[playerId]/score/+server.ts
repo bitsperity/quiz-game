@@ -26,10 +26,15 @@ export const POST: RequestHandler = async ({ request, params }) => {
 
 	try {
 		const { playerId } = params;
-		const { delta } = await request.json();
+		const body = await request.json();
+		const { delta, absoluteScore } = body;
 
-		if (!playerId || typeof delta !== 'number') {
-			return json({ error: 'Invalid parameters' }, { status: 400 });
+		// Entweder delta oder absoluteScore muss vorhanden sein
+		const hasDelta = typeof delta === 'number';
+		const hasAbsolute = typeof absoluteScore === 'number';
+
+		if (!playerId || (!hasDelta && !hasAbsolute)) {
+			return json({ error: 'Invalid parameters - provide delta or absoluteScore' }, { status: 400 });
 		}
 
 		const gameStateService = getGameStateService();
@@ -39,7 +44,13 @@ export const POST: RequestHandler = async ({ request, params }) => {
 			return json({ error: 'Player not found' }, { status: 404 });
 		}
 
-		gameStateService.updateScore(playerId, delta);
+		// absoluteScore hat Priorität, wenn beide angegeben sind
+		if (hasAbsolute) {
+			gameStateService.setScore(playerId, absoluteScore);
+		} else {
+			gameStateService.updateScore(playerId, delta);
+		}
+		
 		const updatedPlayer = gameStateService.getPlayer(playerId);
 
 		if (!updatedPlayer) {
@@ -54,7 +65,7 @@ export const POST: RequestHandler = async ({ request, params }) => {
 			payload: {
 				playerId,
 				newScore: updatedPlayer.score,
-				delta
+				delta: hasAbsolute ? updatedPlayer.score - player.score : delta
 			}
 		});
 		}

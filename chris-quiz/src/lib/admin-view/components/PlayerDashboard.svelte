@@ -4,8 +4,10 @@
 	 * Spieler-Übersicht mit Score-Kontrolle
 	 */
 	import { sortedPlayers, activePlayerId, gameState } from '../stores/adminState';
+	import ScoreEditModal from './ScoreEditModal.svelte';
 
 	export let onScoreUpdate: (playerId: string, delta: number) => void = () => {};
+	export let onScoreSet: (playerId: string, absoluteScore: number) => void = () => {};
 	export let onDeletePlayer: (playerId: string) => void = () => {};
 
 	$: players = $sortedPlayers;
@@ -13,8 +15,27 @@
 	$: question = $gameState.selectedQuestion;
 	$: points = question?.points || 0;
 
+	// Modal State
+	let modalOpen = false;
+	let editingPlayer: { id: string; name: string; score: number } | null = null;
+
 	function updateScore(playerId: string, delta: number) {
 		onScoreUpdate(playerId, delta);
+	}
+
+	function openScoreModal(player: { id: string; name: string; score: number }) {
+		editingPlayer = player;
+		modalOpen = true;
+	}
+
+	function handleModalSave(event: CustomEvent<{ playerId: string; newScore: number }>) {
+		const { playerId, newScore } = event.detail;
+		onScoreSet(playerId, newScore);
+	}
+
+	function handleModalClose() {
+		modalOpen = false;
+		editingPlayer = null;
 	}
 
 	function deletePlayer(playerId: string) {
@@ -58,7 +79,14 @@
 						</span>
 						<div class="player-info">
 							<span class="player-name">{player.name}</span>
-							<span class="player-score">{player.score} Pkt</span>
+							<button 
+								class="player-score-btn" 
+								on:click={() => openScoreModal(player)}
+								title="Punkte bearbeiten"
+							>
+								<span class="score-value">{player.score} Pkt</span>
+								<i class="fas fa-pen edit-icon"></i>
+							</button>
 						</div>
 					</div>
 
@@ -94,6 +122,18 @@
 		{/if}
 	</div>
 </div>
+
+<!-- Score Edit Modal -->
+{#if editingPlayer}
+	<ScoreEditModal
+		isOpen={modalOpen}
+		playerName={editingPlayer.name}
+		playerId={editingPlayer.id}
+		currentScore={editingPlayer.score}
+		on:save={handleModalSave}
+		on:close={handleModalClose}
+	/>
+{/if}
 
 <style>
 	.player-dashboard {
@@ -251,11 +291,42 @@
 		line-height: 1.2;
 	}
 
-	.player-score {
+	.player-score-btn {
+		display: flex;
+		align-items: center;
+		gap: 0.3rem;
+		padding: 0.15rem 0.4rem;
+		margin: -0.15rem -0.4rem;
+		background: transparent;
+		border: 1px solid transparent;
+		border-radius: 4px;
+		cursor: pointer;
+		transition: all 0.15s ease;
+		touch-action: manipulation;
+		-webkit-tap-highlight-color: transparent;
+	}
+
+	.player-score-btn:hover {
+		background: rgba(212, 175, 55, 0.1);
+		border-color: rgba(212, 175, 55, 0.2);
+	}
+
+	.player-score-btn .score-value {
 		font-size: 0.6rem;
 		color: rgba(212, 175, 55, 0.8);
 		font-weight: 600;
 		line-height: 1.2;
+	}
+
+	.player-score-btn .edit-icon {
+		font-size: 0.45rem;
+		color: rgba(212, 175, 55, 0.4);
+		opacity: 0;
+		transition: opacity 0.15s ease;
+	}
+
+	.player-score-btn:hover .edit-icon {
+		opacity: 1;
 	}
 
 	.player-controls {
