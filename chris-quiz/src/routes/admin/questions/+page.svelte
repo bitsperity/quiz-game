@@ -70,57 +70,57 @@
                         <i class="fas fa-times"></i>
                     </button>
                 </div>
-                <form method="POST" action={editingId ? '?/update' : '?/create'} use:enhance={() => {
-                    return async ({ result }) => {
-                        if (result.type === 'success') {
-                            cancelEdit();
-                        }
-                    };
-                }}>
-                    {#if editingId}
-                        <input type="hidden" name="id" value={editingId} />
-                    {/if}
-                    
+        <form method="POST" action={editingId ? '?/update' : '?/create'} use:enhance={() => {
+            return async ({ result }) => {
+                if (result.type === 'success') {
+                    cancelEdit();
+                }
+            };
+        }}>
+            {#if editingId}
+                <input type="hidden" name="id" value={editingId} />
+            {/if}
+            
                     <div class="form-row">
-                        <div class="form-group">
+            <div class="form-group">
                             <label for="category">
                                 <i class="fas fa-folder"></i>
                                 Kategorie
                             </label>
                             <input type="text" id="category" name="category" bind:value={formCategory} required placeholder="z.B. Weihnachten" />
-                        </div>
-                        
+            </div>
+            
                         <div class="form-group form-group-small">
                             <label for="points">
                                 <i class="fas fa-star"></i>
                                 Punkte
                             </label>
-                            <select id="points" name="points" bind:value={formPoints}>
-                                <option value={100}>100</option>
-                                <option value={200}>200</option>
-                                <option value={300}>300</option>
-                                <option value={400}>400</option>
-                                <option value={500}>500</option>
-                            </select>
+                <select id="points" name="points" bind:value={formPoints}>
+                    <option value={100}>100</option>
+                    <option value={200}>200</option>
+                    <option value={300}>300</option>
+                    <option value={400}>400</option>
+                    <option value={500}>500</option>
+                </select>
                         </div>
-                    </div>
-                    
-                    <div class="form-group">
+            </div>
+            
+            <div class="form-group">
                         <label for="question">
                             <i class="fas fa-question"></i>
                             Frage
                         </label>
                         <textarea id="question" name="question" bind:value={formQuestion} required rows="2" placeholder="Die Quizfrage eingeben..."></textarea>
-                    </div>
-                    
-                    <div class="form-group">
+            </div>
+            
+            <div class="form-group">
                         <label for="answer">
                             <i class="fas fa-check"></i>
                             Antwort
                         </label>
                         <textarea id="answer" name="answer" bind:value={formAnswer} required rows="1" placeholder="Die korrekte Antwort..."></textarea>
-                    </div>
-                    
+            </div>
+            
                     <div class="form-actions">
                         <button type="button" class="btn-cancel" on:click={cancelEdit}>
                             <i class="fas fa-times"></i>
@@ -130,9 +130,9 @@
                             <i class="fas {editingId ? 'fa-save' : 'fa-plus'}"></i>
                             {editingId ? 'Speichern' : 'Erstellen'}
                         </button>
-                    </div>
-                </form>
             </div>
+        </form>
+    </div>
         {/if}
 
         <div class="questions-list">

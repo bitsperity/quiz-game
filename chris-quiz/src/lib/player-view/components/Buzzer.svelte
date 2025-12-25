@@ -35,17 +35,17 @@
 
 <div class="buzzer-container">
 	<!-- Buzzer Button -->
-	<button
+		<button
 		class="buzzer"
 		class:active={enabled && !buzzed}
 		class:buzzed={buzzed}
-		class:pressed={pressed}
+			class:pressed={pressed}
 		class:disabled={!enabled && !buzzed}
-		on:click={handlePress}
-		on:touchstart={handleTouchStart}
+			on:click={handlePress}
+			on:touchstart={handleTouchStart}
 		disabled={!enabled || buzzed}
-		type="button"
-	>
+			type="button"
+		>
 		<!-- Glow Effect -->
 		<div class="glow"></div>
 		
@@ -69,7 +69,7 @@
 				{/if}
 			</div>
 		</div>
-	</button>
+		</button>
 	
 	<!-- Status Message -->
 	<div class="status">
@@ -87,7 +87,7 @@
 			</p>
 		{:else}
 			<p class="status-msg waiting">🎄 Warte auf Frage...</p>
-		{/if}
+	{/if}
 	</div>
 </div>
 
@@ -102,7 +102,7 @@
 		width: 100%;
 		height: 100%;
 	}
-
+	
 	/* === BUZZER BUTTON === */
 	.buzzer {
 		position: relative;
@@ -188,7 +188,7 @@
 			inset 0 2px 0 rgba(255, 255, 255, 0.1),
 			inset 0 -4px 10px rgba(0, 0, 0, 0.3);
 	}
-
+	
 	.buzzer.active .surface {
 		background: linear-gradient(145deg, 
 			#dc2626 0%,
@@ -201,7 +201,7 @@
 			inset 0 2px 0 rgba(255, 255, 255, 0.25),
 			inset 0 -4px 15px rgba(0, 0, 0, 0.3);
 	}
-
+	
 	.buzzer.buzzed .surface {
 		background: linear-gradient(145deg, 
 			#16a34a 0%,
@@ -214,13 +214,13 @@
 			inset 0 2px 0 rgba(255, 255, 255, 0.25),
 			inset 0 -4px 15px rgba(0, 0, 0, 0.3);
 	}
-
+	
 	.buzzer.pressed .surface {
 		box-shadow: 
 			0 4px 20px rgba(220, 38, 38, 0.6),
 			inset 0 4px 15px rgba(0, 0, 0, 0.4);
 	}
-
+	
 	/* === ICON === */
 	.icon {
 		font-size: clamp(3rem, 12vw, 4.5rem);
@@ -236,7 +236,7 @@
 	.buzzer.active .icon {
 		animation: shake 0.4s ease-in-out infinite;
 	}
-
+	
 	.check {
 		color: white;
 		font-weight: bold;
@@ -258,7 +258,7 @@
 		color: rgba(255, 255, 255, 0.4);
 		transition: all 0.3s ease;
 	}
-
+	
 	.buzzer.active .label {
 		color: white;
 		text-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
@@ -276,7 +276,7 @@
 		align-items: center;
 		justify-content: center;
 	}
-
+	
 	.status-msg {
 		font-size: 0.9375rem;
 		margin: 0;
@@ -284,7 +284,7 @@
 		align-items: center;
 		gap: 0.5rem;
 	}
-
+	
 	.status-msg.waiting {
 		color: rgba(255, 255, 255, 0.4);
 	}
@@ -294,11 +294,11 @@
 		font-weight: 600;
 		animation: fade-pulse 1s ease-in-out infinite;
 	}
-
+	
 	.status-msg.confirming {
 		color: rgba(255, 255, 255, 0.6);
 	}
-
+	
 	@keyframes fade-pulse {
 		0%, 100% { opacity: 1; }
 		50% { opacity: 0.6; }
@@ -311,12 +311,12 @@
 		border-radius: 50%;
 		animation: dot-pulse 1s ease-in-out infinite;
 	}
-
+	
 	@keyframes dot-pulse {
 		0%, 100% { transform: scale(1); opacity: 1; }
 		50% { transform: scale(1.4); opacity: 0.6; }
 	}
-
+	
 	/* === POSITION BADGE === */
 	.position-badge {
 		display: flex;
@@ -330,20 +330,20 @@
 		border: 1px solid rgba(34, 197, 94, 0.4);
 		border-radius: 14px;
 		animation: pop-in 0.25s ease-out;
-	}
-
+		}
+		
 	@keyframes pop-in {
 		from { transform: scale(0.8); opacity: 0; }
 		to { transform: scale(1); opacity: 1; }
-	}
-
+		}
+		
 	.position-text {
 		font-size: 0.7rem;
 		color: rgba(255, 255, 255, 0.6);
 		text-transform: uppercase;
 		letter-spacing: 0.08em;
-	}
-
+		}
+		
 	.position-num {
 		font-size: 1.75rem;
 		font-weight: 700;
@@ -373,7 +373,7 @@
 			flex-direction: row;
 			gap: 1.5rem;
 		}
-
+		
 		.buzzer {
 			width: clamp(150px, 35vh, 180px);
 		}

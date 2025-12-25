@@ -78,21 +78,21 @@
 					<span class="label-icon">👤</span>
 					Dein Name
 				</label>
-				<input
-					id="player-name"
-					type="text"
-					bind:value={playerName}
-					on:keydown={handleKeydown}
+			<input
+				id="player-name"
+				type="text"
+				bind:value={playerName}
+				on:keydown={handleKeydown}
 					placeholder="Wie heißt du?"
-					disabled={loading}
+				disabled={loading}
 					class="name-input"
 					class:has-error={!!error}
-					autocomplete="off"
-					autocorrect="off"
+				autocomplete="off"
+				autocorrect="off"
 					autocapitalize="words"
-					spellcheck="false"
+				spellcheck="false"
 					enterkeyhint="go"
-				/>
+			/>
 			</div>
 			
 			{#if error}
@@ -101,20 +101,20 @@
 					<span class="error-text">{error}</span>
 				</div>
 			{/if}
-			
-			<button
+		
+		<button
 				class="join-button"
-				on:click={handleSubmit}
-				disabled={loading || !playerName.trim()}
-			>
-				{#if loading}
+			on:click={handleSubmit}
+			disabled={loading || !playerName.trim()}
+		>
+			{#if loading}
 					<span class="loading-spinner"></span>
 					<span>Moment...</span>
-				{:else}
+			{:else}
 					<span class="button-icon">🎅</span>
 					<span>Mitspielen!</span>
-				{/if}
-			</button>
+			{/if}
+		</button>
 		</div>
 		
 		<!-- Footer -->

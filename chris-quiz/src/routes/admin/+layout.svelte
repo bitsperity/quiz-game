@@ -2,7 +2,7 @@
 </script>
 
 <div class="admin-layout">
-    <slot />
+        <slot />
 </div>
 
 <style>

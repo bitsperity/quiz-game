@@ -186,7 +186,7 @@
 					<span class="logout-icon">✕</span>
 				</button>
 			</header>
-			
+
 			<!-- Main Content -->
 			<main class="game-content">
 				<!-- Buzzer - Hauptbereich -->

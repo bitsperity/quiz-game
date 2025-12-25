@@ -51,13 +51,13 @@
 						<span class="player-score">{player.score}</span>
 					</div>
 				{/each}
-			</div>
+					</div>
 		{:else}
 			<div class="waiting-players">
 				<span class="waiting-icon">👥</span>
 				<span class="waiting-text">Warte auf Spieler...</span>
-			</div>
-		{/if}
+				</div>
+			{/if}
 	</div>
 </header>
 
@@ -251,11 +251,11 @@
 		.game-header {
 			padding: 0 1.5rem;
 		}
-		
+
 		.player-chip {
 			min-width: 90px;
 		}
-		
+
 		.player-name {
 			max-width: 60px;
 		}

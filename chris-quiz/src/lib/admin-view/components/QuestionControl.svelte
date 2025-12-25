@@ -78,10 +78,10 @@
 					<span>Abbrechen</span>
 				</button>
 			{:else}
-				<button class="btn-return" on:click={onReturnToMatrix}>
+			<button class="btn-return" on:click={onReturnToMatrix}>
 					<i class="fas fa-arrow-left"></i>
 					<span>Zurück zur Matrix</span>
-				</button>
+			</button>
 			{/if}
 		</div>
 	{:else}

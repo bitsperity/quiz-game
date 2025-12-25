@@ -53,7 +53,7 @@
 
 					<!-- Player Info -->
 					<div class="player-info">
-						<span class="player-name">{entry.playerName}</span>
+					<span class="player-name">{entry.playerName}</span>
 						<span class="reaction-time">
 							<span class="time-icon">⚡</span>
 							{formatReactionTime(entry.reactionTime)}

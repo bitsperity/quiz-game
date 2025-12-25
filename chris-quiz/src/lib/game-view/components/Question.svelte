@@ -38,8 +38,8 @@
 				<div class="category-badge">
 					<span class="badge-icon">📚</span>
 					<span class="badge-text">{question.category}</span>
-				</div>
-				<div class="points-badge">
+			</div>
+			<div class="points-badge">
 					<span class="points-value">{question.points}</span>
 					<span class="points-label">PUNKTE</span>
 				</div>
@@ -52,7 +52,7 @@
 					<span class="label-text">FRAGE</span>
 				</div>
 				<p class="question-text">{question.question}</p>
-			</div>
+		</div>
 
 			<!-- Bottom Decoration -->
 			<div class="card-bottom-decoration">
@@ -63,7 +63,7 @@
 		</div>
 
 		<!-- Buzzer Queue (Side Panel) -->
-		<BuzzerQueue maxVisible={5} />
+			<BuzzerQueue maxVisible={5} />
 	</div>
 {/if}
 
@@ -198,10 +198,10 @@
 		border-radius: 50px;
 		border: 1px solid rgba(255, 255, 255, 0.15);
 	}
-
+    
 	.badge-icon {
 		font-size: 1.3rem;
-	}
+    }
 
 	.badge-text {
 		font-family: 'Georgia', serif;

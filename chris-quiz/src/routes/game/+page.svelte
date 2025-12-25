@@ -71,18 +71,18 @@
 					}));
 				} else {
 					// Außerhalb der Grace Period: Komplett überschreiben
-					gameViewState.set({
+				gameViewState.set({
 						currentView: viewState,
-						selectedQuestion: data.selectedQuestion || null,
-						selectedAnswer: null,
-						buzzerQueue: Array.isArray(data.buzzerQueue) ? data.buzzerQueue : [],
-						players: Array.isArray(data.players) ? data.players : [],
-						matrix: Array.isArray(data.questionMatrix) ? data.questionMatrix : [],
-						categories: Array.isArray(data.categories) ? data.categories : [],
+					selectedQuestion: data.selectedQuestion || null,
+					selectedAnswer: null,
+					buzzerQueue: Array.isArray(data.buzzerQueue) ? data.buzzerQueue : [],
+					players: Array.isArray(data.players) ? data.players : [],
+					matrix: Array.isArray(data.questionMatrix) ? data.questionMatrix : [],
+					categories: Array.isArray(data.categories) ? data.categories : [],
 						gamePhase: data.gamePhase || 'idle',
 						serverView: data.currentView || 'matrix',
 						lastWebSocketUpdate: currentState.lastWebSocketUpdate // Behalte den Timestamp
-					});
+				});
 				}
 			}
 		} catch (error) {
@@ -155,7 +155,7 @@
 		<div class="loading-overlay">
 			<div class="loading-content">
 				<div class="loading-tree">🎄</div>
-				<div class="loading-spinner"></div>
+			<div class="loading-spinner"></div>
 				<p class="loading-text">Lade Weihnachts-Quiz...</p>
 			</div>
 		</div>
@@ -386,7 +386,7 @@
 		display: flex;
 		align-items: center;
 		gap: 1rem;
-	}
+		}
 
 	.preview-icon {
 		font-size: 2rem;

@@ -43,9 +43,9 @@
 				<div class="player-details">
 					<span class="player-name">
 						{player.name}
-						{#if player.id === currentPlayerId}
+				{#if player.id === currentPlayerId}
 							<span class="me-tag">Du</span>
-						{/if}
+				{/if}
 					</span>
 				</div>
 				
@@ -87,7 +87,7 @@
 		border-bottom: 1px solid rgba(255, 255, 255, 0.08);
 		flex-shrink: 0;
 	}
-
+	
 	.header-icon {
 		font-size: 1rem;
 	}
@@ -147,7 +147,7 @@
 	.player-row:last-child {
 		margin-bottom: 0;
 	}
-
+	
 	.player-row.is-me {
 		background: linear-gradient(135deg, 
 			rgba(251, 191, 36, 0.15) 0%, 
@@ -160,7 +160,7 @@
 	.player-row.top-three:not(.is-me) {
 		background: rgba(255, 255, 255, 0.05);
 	}
-
+	
 	/* === RANK === */
 	.rank-area {
 		width: 28px;
@@ -169,17 +169,17 @@
 		align-items: center;
 		justify-content: center;
 	}
-
+	
 	.rank-emoji {
 		font-size: 1.125rem;
 	}
-
+	
 	.rank-number {
 		color: rgba(255, 255, 255, 0.4);
 		font-size: 0.8rem;
 		font-weight: 500;
 	}
-
+	
 	/* === PLAYER DETAILS === */
 	.player-details {
 		flex: 1;
@@ -197,7 +197,7 @@
 		text-overflow: ellipsis;
 		white-space: nowrap;
 	}
-
+	
 	.player-row.is-me .player-name {
 		color: #fbbf24;
 		font-weight: 600;
@@ -219,18 +219,18 @@
 	.score-area {
 		flex-shrink: 0;
 	}
-
+	
 	.score-value {
 		color: #fbbf24;
 		font-size: 1.125rem;
 		font-weight: 700;
 		font-variant-numeric: tabular-nums;
 	}
-
+	
 	.player-row.is-me .score-value {
 		text-shadow: 0 0 10px rgba(251, 191, 36, 0.5);
 	}
-
+	
 	/* === EMPTY STATE === */
 	.empty-state {
 		display: flex;
@@ -245,7 +245,7 @@
 		font-size: 2rem;
 		opacity: 0.5;
 	}
-
+	
 	.empty-text {
 		color: rgba(255, 255, 255, 0.4);
 		font-size: 0.875rem;
@@ -256,20 +256,20 @@
 		.scoreboard-header {
 			padding: 0.5rem 0.75rem;
 		}
-
+		
 		.player-list {
 			padding: 0.375rem;
 		}
-
+		
 		.player-row {
 			padding: 0.5rem 0.625rem;
 			margin-bottom: 0.25rem;
 		}
-
+		
 		.player-name {
 			font-size: 0.85rem;
 		}
-
+		
 		.score-value {
 			font-size: 1rem;
 		}

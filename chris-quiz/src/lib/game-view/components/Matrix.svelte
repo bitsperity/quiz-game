@@ -32,7 +32,7 @@
 		<div class="matrix-wrapper">
 			<!-- Category Headers -->
 			<div class="categories-row" style="--cols: {categoryList.length}">
-				{#each categoryList as category, i}
+			{#each categoryList as category, i}
 					<div class="category-header" transition:scale={{ delay: i * 50 }}>
 						<span class="category-icon">🎄</span>
 						<span class="category-name">{category}</span>
@@ -60,9 +60,9 @@
 								<span class="cell-value">{pointValue}</span>
 								<div class="cell-glow"></div>
 							{/if}
-						</div>
-					{/each}
+					</div>
 				{/each}
+			{/each}
 			</div>
 		</div>
 
@@ -185,13 +185,13 @@
 		color: #d4af37;
 	}
 
-	.matrix-cell.available:hover {
+    .matrix-cell.available:hover {
 		transform: translateY(-4px) scale(1.02);
 		border-color: rgba(212, 175, 55, 0.6);
 		box-shadow: 
 			0 8px 30px rgba(0, 0, 0, 0.4),
 			0 0 30px rgba(212, 175, 55, 0.2);
-	}
+    }
 
 	.matrix-cell.selected {
 		background: linear-gradient(145deg,
@@ -212,7 +212,7 @@
 		background: rgba(15, 30, 45, 0.6);
 		border: 1px solid rgba(255, 255, 255, 0.08);
 		color: rgba(255, 248, 220, 0.3);
-	}
+    }
 
 	.cell-value {
 		position: relative;
