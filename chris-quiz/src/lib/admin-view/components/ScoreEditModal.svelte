@@ -3,7 +3,7 @@
 	 * Score Edit Modal - Admin View
 	 * Ermöglicht das direkte Setzen von Spielerpunkten
 	 */
-	import { createEventDispatcher, onMount } from 'svelte';
+	import { createEventDispatcher } from 'svelte';
 
 	export let playerName: string;
 	export let playerId: string;
@@ -17,11 +17,16 @@
 
 	let inputValue: string = '';
 	let inputElement: HTMLInputElement;
+	let wasOpen: boolean = false;
 
-	$: if (isOpen) {
-		inputValue = currentScore.toString();
-		// Focus input when modal opens
-		setTimeout(() => inputElement?.focus(), 50);
+	// Nur beim Öffnen des Modals den Wert setzen (nicht bei jedem Re-Render)
+	$: {
+		if (isOpen && !wasOpen) {
+			// Modal wurde gerade geöffnet
+			inputValue = currentScore.toString();
+			setTimeout(() => inputElement?.focus(), 50);
+		}
+		wasOpen = isOpen;
 	}
 
 	function handleSave() {

@@ -12,9 +12,10 @@ export default defineConfig({
 			interval: 300
 		},
 		hmr: {
-			port: 24678, // Separater Port für HMR um Konflikt mit Game-WebSocket zu vermeiden
-			clientPort: 24678,
-			host: 'localhost'
+			// HMR läuft über den Hauptserver-Port (funktioniert zuverlässiger in Docker)
+			protocol: 'ws',
+			host: 'localhost',
+			clientPort: 54321
 		}
 	},
 	ssr: {
